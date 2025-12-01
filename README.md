@@ -320,4 +320,4 @@ This project is created for academic purposes at Fakultas Ilmu Komputer.
 
 ---
 
-**Platform Detektor Plagiarisme** - Fakultas Ilmu Komputer © 2025
+**Platform Detektor Plagiarisme** - Dimas Tri M © 2025
