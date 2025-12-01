@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <h2>Register Account</h2>
+        <p>Create a new account to access plagiarism detection system</p>
+
+        <form method="POST" action="{{ url_for('register') }}">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required minlength="6">
+                <small>Minimum 6 characters</small>
+            </div>
+
+            <div class="form-group">
+                <label for="confirm_password">Confirm Password</label>
+                <input type="password" id="confirm_password" name="confirm_password" required>
+            </div>
+
+            <button type="submit" class="btn-primary btn-large">Register</button>
+        </form>
+
+        <div style="margin-top: 20px; text-align: center;">
+            <p>Already have an account? <a href="{{ url_for('login') }}"
+                    style="color: var(--primary-color); font-weight: 600;">Login here</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

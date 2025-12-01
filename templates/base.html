@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Deteksi Plagiarisme - Universitas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Open+Sans:wght@400;600&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <header class="main-header">
+        <div class="container">
+            <div class="logo-area">
+                <h1>Platform Detektor Plagiarisme</h1>
+                <p>Fakultas Ilmu Komputer</p>
+            </div>
+            {% if current_user.is_authenticated %}
+            <nav class="header-nav">
+                <span class="user-greeting">Hi, {{ current_user.name }}</span>
+                <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+                <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+                {% if current_user.is_admin() %}
+                <a href="{{ url_for('admin_users') }}" class="nav-link">Admin</a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+            </nav>
+            {% endif %}
+        </div>
+    </header>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <p>&copy; 2025 Universitas Indonesia. All Rights Reserved.</p>
+        </div>
+    </footer>
+</body>
+
+</html>
