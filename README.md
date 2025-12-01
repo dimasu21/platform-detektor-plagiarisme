@@ -99,12 +99,13 @@ cd platform-plagiarisme
 pip install -r requirements.txt
 
 # Install Tesseract OCR
+# Install Tesseract OCR
 # Download dari: https://github.com/UB-Mannheim/tesseract/wiki
-# Install ke: D:\projectpribadi\tesseract.exe
+# Install ke: C:\Program Files\Tesseract-OCR\ (atau sesuaikan path instalasi)
 
 # Install Poppler
 # Download dari: https://github.com/oschwartz10612/poppler-windows/releases/
-# Extract ke: D:\projectpribadi\poppler-25.11.0\
+# Extract ke folder yang diinginkan, misal: C:\Program Files\poppler\
 ```
 
 #### Linux/Mac
@@ -123,14 +124,16 @@ brew install poppler  # macOS
 
 ### 3. Setup Environment Variables
 
-Sesuaikan path di `file_parser.py`:
+Sesuaikan path di `file_parser.py` jika lokasi instalasi berbeda dari default:
 ```python
 # Tesseract Configuration
-pytesseract.pytesseract.tesseract_cmd = r'D:\projectpribadi\tesseract.exe'
-os.environ['TESSDATA_PREFIX'] = r'D:\projectpribadi\tessdata'
+# Sesuaikan dengan lokasi instalasi Tesseract di komputer Anda
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+os.environ['TESSDATA_PREFIX'] = r'C:\Program Files\Tesseract-OCR\tessdata'
 
 # Poppler Configuration  
-POPPLER_PATH = r'D:\projectpribadi\poppler-25.11.0\Library\bin'
+# Sesuaikan dengan lokasi folder bin Poppler
+POPPLER_PATH = r'C:\Program Files\poppler\Library\bin'
 ```
 
 ### 4. Inisialisasi Database
