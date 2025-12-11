@@ -123,10 +123,15 @@ def dashboard():
     result = None
     suspect_images = []
     source_images = []
+    suspect_highlighted = ""
+    source_highlighted = ""
+    suspect_original = ""
+    source_original = ""
     
     if request.method == 'POST':
         from file_parser import extract_text_and_images_from_file
         from highlight_visualizer import highlight_plagiarism_in_images, save_highlighted_image
+        from text_highlighter import highlight_text_matches
         
         # Extract text and images from both files
         suspect_data = None
@@ -149,6 +154,10 @@ def dashboard():
                 source_data = {'text': source_text, 'images': [], 'filename': 'manual_input'}
         
         if suspect_data and source_data and suspect_data['text'] and source_data['text']:
+            # Store original texts for display
+            suspect_original = suspect_data['text']
+            source_original = source_data['text']
+            
             # Preprocess
             suspect_processed = preprocess_text(suspect_data['text'])
             source_processed = preprocess_text(source_data['text'])
@@ -162,6 +171,15 @@ def dashboard():
             else:
                 # Detect plagiarism
                 result = detect_plagiarism(suspect_processed, source_processed, k=5)
+                
+                # Generate highlighted text for visual comparison
+                if result['matches']:
+                    suspect_highlighted = highlight_text_matches(suspect_original, result['matches'])
+                    source_highlighted = highlight_text_matches(source_original, result['matches'])
+                else:
+                    from html import escape
+                    suspect_highlighted = escape(suspect_original)
+                    source_highlighted = escape(source_original)
                 
                 # Generate unique session ID for this check
                 session_id = str(uuid.uuid4())[:8]
@@ -205,7 +223,9 @@ def dashboard():
     return render_template('dashboard.html', 
                          result=result, 
                          suspect_images=suspect_images,
-                         source_images=source_images)
+                         source_images=source_images,
+                         suspect_highlighted=suspect_highlighted,
+                         source_highlighted=source_highlighted)
 
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
@@ -294,6 +314,144 @@ def admin_toggle_role(user_id):
     
     flash(f'User {user.email} role changed to {user.role}.', 'success')
     return redirect(url_for('admin_users'))
+
+# ==================== BATCH COMPARISON ====================
+
+@app.route('/batch', methods=['GET', 'POST'])
+@login_required
+def batch_comparison():
+    from batch_comparison import compare_all_pairs, get_suspicious_pairs, get_comparison_stats
+    
+    results = None
+    stats = None
+    suspicious = None
+    matrix = None
+    doc_names = None
+    
+    if request.method == 'POST':
+        from file_parser import extract_text_and_images_from_file
+        
+        files = request.files.getlist('documents')
+        
+        if len(files) < 2:
+            flash('Please upload at least 2 documents to compare.', 'error')
+            return render_template('batch.html')
+        
+        if len(files) > 30:
+            flash('Maximum 30 documents allowed.', 'error')
+            return render_template('batch.html')
+        
+        # Extract text from all files
+        documents = []
+        batch_id = str(uuid.uuid4())[:8]
+        
+        for idx, f in enumerate(files):
+            if f.filename:
+                data = extract_text_and_images_from_file(f)
+                if data and data['text']:
+                    # Save images to files if present
+                    image_paths = []
+                    if data.get('images'):
+                        for img_idx, img in enumerate(data['images']):
+                            img_filename = f'batch_{batch_id}_{idx}_{img_idx}.png'
+                            img_path = os.path.join('static', 'uploads', img_filename)
+                            os.makedirs(os.path.dirname(img_path), exist_ok=True)
+                            img.save(img_path, 'PNG')
+                            image_paths.append(f'uploads/{img_filename}')
+                    
+                    documents.append({
+                        'name': f.filename,
+                        'text': data['text'],
+                        'images': image_paths  # Store paths, not PIL objects
+                    })
+                else:
+                    flash(f'Could not extract text from: {f.filename}', 'error')
+        
+        if len(documents) < 2:
+            flash('Need at least 2 valid documents with extractable text.', 'error')
+            return render_template('batch.html')
+        
+        # Run cross-comparison
+        results = compare_all_pairs(documents)
+        stats = get_comparison_stats(results['pairs'])
+        suspicious = get_suspicious_pairs(results['pairs'], threshold=50)
+        matrix = results['matrix']
+        doc_names = results['document_names']
+        
+        # Store results in session for detail view and back navigation
+        session['batch_results'] = results
+    else:
+        # GET request - try to load results from session
+        results = session.get('batch_results')
+        if results:
+            stats = get_comparison_stats(results['pairs'])
+            suspicious = get_suspicious_pairs(results['pairs'], threshold=50)
+            matrix = results['matrix']
+            doc_names = results['document_names']
+    
+    return render_template('batch.html',
+                         results=results,
+                         stats=stats,
+                         suspicious=suspicious,
+                         matrix=matrix,
+                         doc_names=doc_names)
+
+@app.route('/batch/detail/<int:pair_index>')
+@login_required
+def batch_detail(pair_index):
+    from text_highlighter import highlight_text_matches
+    from highlight_visualizer import highlight_plagiarism_in_images
+    from PIL import Image
+    
+    results = session.get('batch_results')
+    if not results or pair_index >= len(results['pairs']):
+        flash('Comparison data not found. Please run batch comparison again.', 'error')
+        return redirect(url_for('batch_comparison'))
+    
+    pair = results['pairs'][pair_index]
+    
+    # Generate highlighted text
+    suspect_highlighted = highlight_text_matches(pair['doc1_text'], pair['matches'])
+    source_highlighted = highlight_text_matches(pair['doc2_text'], pair['matches'])
+    
+    # Generate highlighted images if raw images exist
+    doc1_highlighted = []
+    doc2_highlighted = []
+    
+    raw_doc1_images = pair.get('doc1_images', [])
+    raw_doc2_images = pair.get('doc2_images', [])
+    matches = pair.get('matches', [])
+    
+    if raw_doc1_images and matches:
+        # Load raw images, apply highlights, save highlighted versions
+        pil_images = [Image.open(os.path.join('static', path)) for path in raw_doc1_images]
+        highlighted = highlight_plagiarism_in_images(pil_images, matches)
+        
+        for idx, img in enumerate(highlighted):
+            filename = f'highlighted_d1_{pair_index}_{idx}.png'
+            path = os.path.join('static', 'uploads', filename)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            img.save(path, 'PNG')
+            doc1_highlighted.append(f'uploads/{filename}')
+    
+    if raw_doc2_images and matches:
+        pil_images = [Image.open(os.path.join('static', path)) for path in raw_doc2_images]
+        highlighted = highlight_plagiarism_in_images(pil_images, matches)
+        
+        for idx, img in enumerate(highlighted):
+            filename = f'highlighted_d2_{pair_index}_{idx}.png'
+            path = os.path.join('static', 'uploads', filename)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            img.save(path, 'PNG')
+            doc2_highlighted.append(f'uploads/{filename}')
+    
+    return render_template('batch_detail.html',
+                         pair=pair,
+                         pair_index=pair_index,
+                         suspect_highlighted=suspect_highlighted,
+                         source_highlighted=source_highlighted,
+                         doc1_images=doc1_highlighted if doc1_highlighted else raw_doc1_images,
+                         doc2_images=doc2_highlighted if doc2_highlighted else raw_doc2_images)
 
 if __name__ == '__main__':
     app.run(debug=True)

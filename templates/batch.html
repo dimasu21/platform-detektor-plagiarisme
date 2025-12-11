@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="section-header">
+        <h2>Multi Compare</h2>
+        <p>Bandingkan <span>beberapa jawaban mahasiswa</span> satu sama lain</p>
+    </div>
+
+    <div class="detector-grid">
+        <form method="POST" action="{{ url_for('batch_comparison') }}" class="detector-form"
+            enctype="multipart/form-data">
+            <div class="batch-upload-section">
+                <label for="documents">📁 Unggah Jawaban Mahasiswa</label>
+                <p class="upload-hint">Pilih 2-30 file (.txt, .docx, .pdf, .png, .jpg)</p>
+
+                <div class="file-drop-zone" id="dropZone">
+                    <div class="drop-icon">📄</div>
+                    <p>Seret & lepas file di sini atau klik untuk memilih</p>
+                    <input type="file" name="documents" id="documents" multiple accept=".txt,.docx,.pdf,.png,.jpg,.jpeg"
+                        required>
+                </div>
+
+                <div class="selected-files" id="selectedFiles"></div>
+            </div>
+
+            <div class="action-area">
+                <button type="submit" class="btn-primary btn-large"> Jalankan Perbandingan</button>
+            </div>
+        </form>
+
+        {% if stats %}
+        <div class="result-section">
+            <h3>📊 Hasil Perbandingan</h3>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-label">Total Perbandingan</span>
+                    <span class="stat-value">{{ stats.total_comparisons }}</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Rata-rata Kemiripan</span>
+                    <span class="stat-value">{{ stats.avg_similarity }}%</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Kemiripan Tertinggi</span>
+                    <span class="stat-value">{{ stats.max_similarity }}%</span>
+                </div>
+            </div>
+
+            <div class="score-interpretation">
+                <h4>📋 Panduan Interpretasi Skor</h4>
+                <div class="interpretation-grid">
+                    <div class="interpretation-item">
+                        <span class="level-badge high">🔴 90-100%</span>
+                        <span class="level-desc">Terindikasi kuat plagiarisme - Perlu ditinjau segera</span>
+                    </div>
+                    <div class="interpretation-item">
+                        <span class="level-badge medium">🟡 60-89%</span>
+                        <span class="level-desc">Mencurigakan - Perlu investigasi lebih lanjut</span>
+                    </div>
+                    <div class="interpretation-item">
+                        <span class="level-badge low">🟢 30-59%</span>
+                        <span class="level-desc">Resiko rendah - Beberapa frasa umum terdeteksi</span>
+                    </div>
+                    <div class="interpretation-item">
+                        <span class="level-badge safe">✅ 0-29%</span>
+                        <span class="level-desc">Aman - Minimal atau tidak ada plagiarisme</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="all-pairs-section">
+                <h4>📝 Semua Perbandingan</h4>
+                <div class="pairs-list">
+                    {% for pair in results.pairs %}
+                    <a href="{{ url_for('batch_detail', pair_index=loop.index0) }}" class="pair-item">
+                        <div class="pair-docs">
+                            <span>{{ pair.doc1_name }}</span>
+                            <span class="separator">vs</span>
+                            <span>{{ pair.doc2_name }}</span>
+                        </div>
+                        <div class="pair-similarity">
+                            {{ pair.similarity }}%
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .batch-upload-section {
+        text-align: center;
+    }
+
+    .batch-upload-section label {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    .upload-hint {
+        color: var(--text-gray);
+        margin-bottom: 20px;
+    }
+
+    .file-drop-zone {
+        border: 2px dashed var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 50px;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: var(--bg-gray);
+    }
+
+    .file-drop-zone:hover {
+        border-color: var(--accent-lime);
+        background: rgba(185, 255, 102, 0.1);
+    }
+
+    .file-drop-zone.dragover {
+        border-color: var(--accent-lime);
+        background: rgba(185, 255, 102, 0.2);
+    }
+
+    .drop-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+    }
+
+    .file-drop-zone input[type="file"] {
+        display: none;
+    }
+
+    .selected-files {
+        margin-top: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .file-tag {
+        background: var(--accent-lime);
+        padding: 8px 16px;
+        border-radius: var(--radius-full);
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    /* All Pairs List */
+    .all-pairs-section {
+        margin-top: 30px;
+    }
+
+    .pairs-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .pair-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: var(--bg-gray);
+        border-radius: var(--radius-sm);
+        text-decoration: none;
+        color: var(--text-dark);
+        transition: all 0.2s;
+    }
+
+    .pair-item:hover {
+        background: var(--bg-white);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .pair-docs {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .separator {
+        color: var(--text-gray);
+        font-size: 0.85rem;
+    }
+
+    .pair-similarity {
+        font-weight: 600;
+        padding: 6px 16px;
+        border-radius: var(--radius-full);
+        font-size: 0.9rem;
+        background: var(--primary-dark);
+        color: white;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('documents');
+        const selectedFiles = document.getElementById('selectedFiles');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            fileInput.files = e.dataTransfer.files;
+            updateFileList();
+        });
+
+        fileInput.addEventListener('change', updateFileList);
+
+        function updateFileList() {
+            selectedFiles.innerHTML = '';
+            for (let file of fileInput.files) {
+                const tag = document.createElement('span');
+                tag.className = 'file-tag';
+                tag.textContent = file.name;
+                selectedFiles.appendChild(tag);
+            }
+        }
+    });
+</script>
+{% endblock %}

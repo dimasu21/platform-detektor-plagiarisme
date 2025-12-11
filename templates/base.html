@@ -4,10 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Deteksi Plagiarisme - Universitas</title>
+    <title>Plagiarism Detector</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Open+Sans:wght@400;600&display=swap"
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
 </head>
 
@@ -15,18 +16,25 @@
     <header class="main-header">
         <div class="container">
             <div class="logo-area">
-                <h1>Platform Detektor Plagiarisme</h1>
-                <p>Fakultas Ilmu Komputer</p>
+                <h1>Plagiarism<span class="highlight">Detector</span></h1>
             </div>
             {% if current_user.is_authenticated %}
-            <nav class="header-nav">
-                <span class="user-greeting">Hi, {{ current_user.name }}</span>
-                <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+            <button class="burger-menu" id="burgerMenu" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <nav class="header-nav" id="headerNav">
+                <a href="{{ url_for('dashboard') }}" class="nav-link">Compare</a>
+                <a href="{{ url_for('batch_comparison') }}" class="nav-link">Multi Compare</a>
                 <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
                 {% if current_user.is_admin() %}
                 <a href="{{ url_for('admin_users') }}" class="nav-link">Admin</a>
                 {% endif %}
-                <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+                <div class="user-area">
+                    <span class="user-greeting">{{ current_user.name }}</span>
+                    <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+                </div>
             </nav>
             {% endif %}
         </div>
@@ -48,9 +56,31 @@
 
     <footer class="main-footer">
         <div class="container">
-            <p>&copy; 2025 Universitas Indonesia. All Rights Reserved.</p>
+            <p>© 2025 Dimas Tri M. All rights reserved.</p>
         </div>
     </footer>
+
+    <script>
+        // Hamburger menu toggle
+        const burgerMenu = document.getElementById('burgerMenu');
+        const headerNav = document.getElementById('headerNav');
+
+        if (burgerMenu && headerNav) {
+            burgerMenu.addEventListener('click', function () {
+                burgerMenu.classList.toggle('active');
+                headerNav.classList.toggle('active');
+            });
+
+            // Close menu when clicking on a link
+            const navLinks = headerNav.querySelectorAll('.nav-link, .btn-logout');
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    burgerMenu.classList.remove('active');
+                    headerNav.classList.remove('active');
+                });
+            });
+        }
+    </script>
 </body>
 
 </html>

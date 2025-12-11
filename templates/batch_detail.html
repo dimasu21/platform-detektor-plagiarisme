@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="section-header">
+        <a href="{{ url_for('batch_comparison') }}" class="back-link">← Kembali ke Daftar</a>
+        <h2>Detail Perbandingan</h2>
+        <p>{{ pair.doc1_name }} <span>vs</span> {{ pair.doc2_name }}</p>
+    </div>
+
+    <div class="result-section">
+        <div
+            class="score-card {% if pair.similarity >= 90 %}high-risk{% elif pair.similarity >= 60 %}medium-risk{% else %}low-risk{% endif %}">
+            <span class="score-label">Skor Kemiripan</span>
+            <span class="score-value">{{ pair.similarity }}%</span>
+        </div>
+
+        <div class="score-interpretation">
+            <h4>📋 Panduan Interpretasi Skor</h4>
+            <div class="interpretation-grid">
+                <div class="interpretation-item {% if pair.similarity >= 90 %}active{% endif %}">
+                    <span class="level-badge high">🔴 90-100%</span>
+                    <span class="level-desc">Terindikasi kuat plagiarisme - Perlu ditinjau segera</span>
+                </div>
+                <div
+                    class="interpretation-item {% if pair.similarity >= 60 and pair.similarity < 90 %}active{% endif %}">
+                    <span class="level-badge medium">🟡 60-89%</span>
+                    <span class="level-desc">Mencurigakan - Perlu investigasi lebih lanjut</span>
+                </div>
+                <div
+                    class="interpretation-item {% if pair.similarity >= 30 and pair.similarity < 60 %}active{% endif %}">
+                    <span class="level-badge low">🟢 30-59%</span>
+                    <span class="level-desc">Resiko rendah - Beberapa frasa umum terdeteksi</span>
+                </div>
+                <div class="interpretation-item {% if pair.similarity < 30 %}active{% endif %}">
+                    <span class="level-badge safe">✅ 0-29%</span>
+                    <span class="level-desc">Aman - Minimal atau tidak ada plagiarisme</span>
+                </div>
+            </div>
+        </div>
+
+        {% if doc1_images or doc2_images %}
+        <div class="visual-results">
+            <h4>📄 Dokumen dengan Sorotan Plagiarisme</h4>
+            <p class="highlight-legend">
+                <span class="legend-box"
+                    style="background: rgba(255,0,0,0.3); border: 2px solid red; display: inline-block; width: 20px; height: 12px; border-radius: 4px;"></span>
+                Kotak merah = Plagiarisme terdeteksi
+            </p>
+
+            <div class="documents-grid">
+                {% if doc1_images %}
+                <div class="document-column">
+                    <h5>{{ pair.doc1_name }}</h5>
+                    <div class="document-images">
+                        {% for image_path in doc1_images %}
+                        <div class="document-page">
+                            <img src="{{ url_for('static', filename=image_path) }}" alt="Halaman {{ loop.index }}">
+                            <span class="page-number">Halaman {{ loop.index }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <a href="{{ url_for('static', filename=doc1_images[0]) }}" download class="btn-download">
+                        ⬇ Unduh Gambar
+                    </a>
+                </div>
+                {% endif %}
+
+                {% if doc2_images %}
+                <div class="document-column">
+                    <h5>{{ pair.doc2_name }}</h5>
+                    <div class="document-images">
+                        {% for image_path in doc2_images %}
+                        <div class="document-page">
+                            <img src="{{ url_for('static', filename=image_path) }}" alt="Halaman {{ loop.index }}">
+                            <span class="page-number">Halaman {{ loop.index }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <a href="{{ url_for('static', filename=doc2_images[0]) }}" download class="btn-download">
+                        ⬇ Unduh Gambar
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="text-comparison-section">
+            <h4>📝 Perbandingan Teks Visual</h4>
+            <p class="comparison-legend">
+                <span class="legend-highlight"></span>
+                Teks yang disorot = Frasa yang cocok terdeteksi
+            </p>
+
+            <div class="text-comparison-grid">
+                <div class="text-panel suspect-panel">
+                    <h5>📄 {{ pair.doc1_name }}</h5>
+                    <div class="text-content">
+                        {{ suspect_highlighted|safe }}
+                    </div>
+                </div>
+
+                <div class="text-panel source-panel">
+                    <h5>📄 {{ pair.doc2_name }}</h5>
+                    <div class="text-content">
+                        {{ source_highlighted|safe }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="matches-details">
+            <h4>🔍 Frasa yang Cocok Terdeteksi (K-Gram)</h4>
+            {% if pair.matches %}
+            <ul class="match-list">
+                {% for match in pair.matches %}
+                <li>"{{ match }}"</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="no-match">Tidak ada frasa yang cocok secara signifikan ditemukan.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .back-link {
+        display: inline-block;
+        margin-bottom: 15px;
+        color: var(--text-gray);
+        text-decoration: none;
+        font-weight: 500;
+        padding: 8px 16px;
+        background: var(--bg-gray);
+        border-radius: var(--radius-full);
+        transition: all 0.2s;
+    }
+
+    .back-link:hover {
+        background: var(--primary-dark);
+        color: white;
+    }
+
+    .section-header span {
+        background-color: var(--accent-lime);
+        padding: 4px 12px;
+        border-radius: var(--radius-sm);
+        font-weight: 500;
+    }
+</style>
+{% endblock %}

@@ -3,18 +3,18 @@
 {% block content %}
 <div class="dashboard-container">
     <div class="section-header">
-        <h2>Detektor Plagiarisme Jawaban Mahasiswa</h2>
-        <p>Metode: Rabin-Karp (K-Gram = 5) dengan Visual Highlighting</p>
+        <h2>Deteksi Plagiarisme</h2>
+        <p>Metode: <span>Rabin-Karp K-Gram</span> dengan Tampilan Visual</p>
     </div>
 
     <div class="detector-grid">
         <form method="POST" action="{{ url_for('dashboard') }}" class="detector-form" enctype="multipart/form-data">
             <div class="input-group">
                 <div class="input-box">
-                    <label for="suspect_text">Jawaban Mahasiswa (Suspect)</label>
+                    <label for="suspect_text">Jawaban Mahasiswa</label>
                     <div class="input-options">
                         <textarea id="suspect_text" name="suspect_text"
-                            placeholder="Tempelkan jawaban mahasiswa di sini..."></textarea>
+                            placeholder="Tempel jawaban mahasiswa di sini..."></textarea>
                         <div class="file-upload-wrapper">
                             <span class="or-divider">ATAU Unggah File (.docx, .pdf, .txt, .png, .jpg)</span>
                             <input type="file" name="suspect_file" accept=".docx,.pdf,.txt,.png,.jpg,.jpeg">
@@ -23,10 +23,10 @@
                 </div>
 
                 <div class="input-box">
-                    <label for="source_text">Sumber Referensi / Kunci Jawaban (Source)</label>
+                    <label for="source_text">Kunci Jawaban/Jawaban lainnya</label>
                     <div class="input-options">
                         <textarea id="source_text" name="source_text"
-                            placeholder="Tempelkan sumber referensi atau kunci jawaban di sini..."></textarea>
+                            placeholder="Tempel sumber referensi atau kunci jawaban lainnya disini..."></textarea>
                         <div class="file-upload-wrapper">
                             <span class="or-divider">ATAU Unggah File (.docx, .pdf, .txt, .png, .jpg)</span>
                             <input type="file" name="source_file" accept=".docx,.pdf,.txt,.png,.jpg,.jpeg">
@@ -36,62 +36,112 @@
             </div>
 
             <div class="action-area">
-                <button type="submit" class="btn-primary btn-large">Periksa Plagiarisme</button>
+                <button type="submit" class="btn-primary btn-large">Cek Plagiarisme</button>
             </div>
         </form>
 
         {% if result %}
         <div class="result-section">
-            <h3>Hasil Analisis</h3>
+            <h3>📊 Hasil Analisis</h3>
 
             <div
-                class="score-card {% if result.similarity_score > 50 %}high-risk{% elif result.similarity_score > 20 %}medium-risk{% else %}low-risk{% endif %}">
-                <span class="score-label">Tingkat Kemiripan</span>
+                class="score-card {% if result.similarity_score >= 90 %}high-risk{% elif result.similarity_score >= 60 %}medium-risk{% else %}low-risk{% endif %}">
+                <span class="score-label">Skor Kemiripan</span>
                 <span class="score-value">{{ result.similarity_score }}%</span>
             </div>
 
+            <div class="score-interpretation">
+                <h4>📋 Panduan Interpretasi Skor</h4>
+                <div class="interpretation-grid">
+                    <div class="interpretation-item {% if result.similarity_score >= 90 %}active{% endif %}">
+                        <span class="level-badge high">🔴 90-100%</span>
+                        <span class="level-desc">Terindikasi kuat plagiarisme - Perlu ditinjau segera</span>
+                    </div>
+                    <div
+                        class="interpretation-item {% if result.similarity_score >= 60 and result.similarity_score < 90 %}active{% endif %}">
+                        <span class="level-badge medium">🟡 60-89%</span>
+                        <span class="level-desc">Mencurigakan - Perlu investigasi lebih lanjut</span>
+                    </div>
+                    <div
+                        class="interpretation-item {% if result.similarity_score >= 30 and result.similarity_score < 60 %}active{% endif %}">
+                        <span class="level-badge low">🟢 30-59%</span>
+                        <span class="level-desc">Resiko rendah - Beberapa frasa umum terdeteksi</span>
+                    </div>
+                    <div class="interpretation-item {% if result.similarity_score < 30 %}active{% endif %}">
+                        <span class="level-badge safe">✅ 0-29%</span>
+                        <span class="level-desc">Aman - Minimal atau tidak ada plagiarisme</span>
+                    </div>
+                </div>
+            </div>
+
+            {% if suspect_highlighted or source_highlighted %}
+            <div class="text-comparison-section">
+                <h4>📝 Perbandingan Teks Visual</h4>
+                <p class="comparison-legend">
+                    <span class="legend-highlight"></span>
+                    Teks yang disorot = Frasa yang cocok terdeteksi
+                </p>
+
+                <div class="text-comparison-grid">
+                    <div class="text-panel suspect-panel">
+                        <h5>📄 Jawaban Mahasiswa</h5>
+                        <div class="text-content">
+                            {{ suspect_highlighted|safe }}
+                        </div>
+                    </div>
+
+                    <div class="text-panel source-panel">
+                        <h5>📚 Sumber Referensi</h5>
+                        <div class="text-content">
+                            {{ source_highlighted|safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             {% if suspect_images or source_images %}
             <div class="visual-results">
-                <h4>📄 Dokumen dengan Highlight Plagiarisme</h4>
+                <h4>📄 Dokumen dengan Sorotan Plagiarisme</h4>
                 <p class="highlight-legend">
                     <span class="legend-box"
-                        style="background: rgba(255,0,0,0.3); border: 2px solid red; display: inline-block; width: 20px; height: 12px;"></span>
-                    Bagian dengan kotak merah = Terdeteksi plagiarisme
+                        style="background: rgba(255,0,0,0.3); border: 2px solid red; display: inline-block; width: 20px; height: 12px; border-radius: 4px;"></span>
+                    Kotak merah = Plagiarisme terdeteksi
                 </p>
 
                 <div class="documents-grid">
                     {% if suspect_images %}
                     <div class="document-column">
-                        <h5>Jawaban Mahasiswa (Suspect)</h5>
+                        <h5>Jawaban Mahasiswa</h5>
                         <div class="document-images">
                             {% for image_path in suspect_images %}
                             <div class="document-page">
                                 <img src="{{ url_for('static', filename=image_path) }}"
-                                    alt="Suspect Page {{ loop.index }}">
+                                    alt="Halaman Tersangka {{ loop.index }}">
                                 <span class="page-number">Halaman {{ loop.index }}</span>
                             </div>
                             {% endfor %}
                         </div>
                         <a href="{{ url_for('static', filename=suspect_images[0]) }}" download class="btn-download">
-                            ⬇ Download Highlighted Images
+                            ⬇ Unduh Gambar
                         </a>
                     </div>
                     {% endif %}
 
                     {% if source_images %}
                     <div class="document-column">
-                        <h5>Sumber Referensi (Source)</h5>
+                        <h5>Sumber Referensi</h5>
                         <div class="document-images">
                             {% for image_path in source_images %}
                             <div class="document-page">
                                 <img src="{{ url_for('static', filename=image_path) }}"
-                                    alt="Source Page {{ loop.index }}">
+                                    alt="Halaman Sumber {{ loop.index }}">
                                 <span class="page-number">Halaman {{ loop.index }}</span>
                             </div>
                             {% endfor %}
                         </div>
                         <a href="{{ url_for('static', filename=source_images[0]) }}" download class="btn-download">
-                            ⬇ Download Highlighted Images
+                            ⬇ Unduh Gambar
                         </a>
                     </div>
                     {% endif %}
@@ -100,7 +150,7 @@
             {% endif %}
 
             <div class="matches-details">
-                <h4>Frasa yang Terdeteksi Sama (K-Gram):</h4>
+                <h4>🔍 Frasa yang Cocok Terdeteksi (K-Gram)</h4>
                 {% if result.matches %}
                 <ul class="match-list">
                     {% for match in result.matches %}
@@ -108,7 +158,7 @@
                     {% endfor %}
                 </ul>
                 {% else %}
-                <p class="no-match">Tidak ditemukan kesamaan frasa yang signifikan.</p>
+                <p class="no-match">Tidak ada frasa yang cocok secara signifikan ditemukan.</p>
                 {% endif %}
             </div>
         </div>

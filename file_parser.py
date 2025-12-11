@@ -1,3 +1,21 @@
+import docx
+from PyPDF2 import PdfReader
+from PIL import Image
+import pytesseract
+from pdf2image import convert_from_bytes
+import os
+
+# Configure Tesseract path for Windows
+pytesseract.pytesseract.tesseract_cmd = r'D:\projectpribadi\tesseract.exe'
+
+# Configure Poppler path for Windows (for pdf2image)
+POPPLER_PATH = r'C:\Users\USER\AppData\Local\poppler-24.08.0\Library\bin'
+
+# Allowed file extensions
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'docx', 'png', 'jpg', 'jpeg'}
+
+def _preprocess_image_for_ocr(image):
+    """
     Preprocess image to improve OCR accuracy.
     - Convert to grayscale
     - Increase contrast
