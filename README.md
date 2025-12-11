@@ -8,8 +8,8 @@ Sistem ini dirancang untuk Fakultas Ilmu Komputer untuk membantu mendeteksi kesa
 
 ## ✨ Fitur Utama
 
-### 🔍 Deteksi Plagiarisme
-- **Algoritma Rabin-Karp**: Deteksi plagiarisme berbasis rolling hash dan n-gram matching
+### 🔍 Deteksi Plagiarisme dengan Rabin-Karp K-Gram
+- **Algoritma Rabin-Karp**: Deteksi plagiarisme berbasis rolling hash dan K-Gram (k=5)
 - **Preprocessing Teks**: Stemming Bahasa Indonesia menggunakan PySastrawi
 - **Multi-format Support**: 
   - Dokumen teks (.txt)
@@ -17,23 +17,60 @@ Sistem ini dirancang untuk Fakultas Ilmu Komputer untuk membantu mendeteksi kesa
   - PDF (.pdf)
   - Gambar (.jpg, .jpeg, .png) dengan OCR
 
-### 🎨 Visualisasi Highlight
-- **Visual Plagiarism Highlighting**: Tampilkan dokumen dengan highlight kotak merah pada bagian yang terdeteksi plagiat
-- **OCR Integration**: Ekstraksi teks dan koordinat bounding box dari dokumen scan/gambar
-- **Multi-page Support**: Vertical scrolling untuk dokumen multi-halaman
-- **Download Support**: Unduh dokumen yang sudah di-highlight
+### 📄 Compare (Perbandingan 2 Dokumen)
+- Upload atau paste teks untuk membandingkan 2 dokumen
+- Hasil similarity score dengan interpretasi (0-100%)
+- Visual highlight teks yang cocok (warna kuning)
+- OCR highlight dengan kotak merah pada dokumen gambar/PDF
 
-### 👥 User Management
-- **Authentication System**: Login dengan email dan password
-- **User Registration**: Pendaftaran user baru
+### 📑 Multi Compare (Batch hingga 30 File)
+- Upload hingga 30 file sekaligus
+- Perbandingan semua pasangan dokumen secara otomatis
+- Statistik: Total perbandingan, rata-rata similarity, similarity tertinggi
+- Lihat detail perbandingan untuk setiap pasangan
+- Visual highlight OCR dengan kotak merah
+
+### 🖼️ OCR untuk Gambar/PDF
+- Ekstraksi teks otomatis dari gambar dan PDF scan
+- Preprocessing gambar untuk akurasi OCR lebih baik
+- Multi-page support untuk dokumen PDF
+- Download hasil dengan highlight
+
+### 🎨 Visual Highlight
+- **Kotak Merah**: Menandai area plagiarisme pada dokumen gambar/PDF
+- **Teks Kuning**: Menandai frasa yang cocok pada perbandingan teks
+- Download dokumen yang sudah di-highlight
+
+### 📊 Score Interpretation (Panduan Interpretasi Skor)
+| Skor | Level | Interpretasi |
+|------|-------|--------------|
+| 90-100% | 🔴 Tinggi | Terindikasi kuat plagiarisme - Perlu ditinjau segera |
+| 60-89% | 🟡 Mencurigakan | Perlu investigasi lebih lanjut |
+| 30-59% | 🟢 Rendah | Beberapa frasa umum terdeteksi |
+| 0-29% | ✅ Aman | Minimal atau tidak ada plagiarisme |
+
+### 📱 Responsive Mobile dengan Hamburger Menu
+- Desain responsif untuk semua ukuran layar
+- Hamburger menu untuk navigasi mobile
+- Layout adaptif untuk tablet dan smartphone
+
+### 👥 User Authentication
+- **Login/Register**: Autentikasi dengan email dan password
 - **User Profiles**: Lihat dan edit profil user
-- **Password Toggle**: Show/hide password dengan icon mata
+- **Password Toggle**: Show/hide password
 - **Role-based Access**: Admin dan User role
+- **Admin Dashboard**: Kelola users dan lihat statistik
 
-### 🔐 Admin Dashboard
-- **User Management**: Lihat, edit, dan hapus users
-- **Role Management**: Toggle role antara Admin dan User
-- **Statistics**: Total users, admin count, regular users count
+## 🎨 Desain UI
+
+- **Futuristic Minimalist Design**: Clean dan modern
+- **Color Scheme**:
+  - Primary Dark: #191A23
+  - Accent Lime: #B9FF66
+  - Background: White/Light Gray
+- **Typography**: Space Grotesk (Google Fonts)
+- **Large Rounded Corners**: Border radius modern
+- **Responsive**: Mobile-first approach
 
 ## 🛠️ Teknologi yang Digunakan
 
@@ -46,7 +83,7 @@ Sistem ini dirancang untuk Fakultas Ilmu Komputer untuk membantu mendeteksi kesa
 
 ### Text Processing
 - **PySastrawi**: Indonesian text stemming
-- **Rabin-Karp Algorithm**: Plagiarism detection
+- **Rabin-Karp Algorithm**: Plagiarism detection dengan K-Gram
 
 ### OCR & Image Processing
 - **Tesseract OCR**: Text extraction dari gambar
@@ -56,9 +93,9 @@ Sistem ini dirancang untuk Fakultas Ilmu Komputer untuk membantu mendeteksi kesa
 - **pypdf**: PDF text extraction
 
 ### Frontend
-- **HTML5 & CSS3**: Professional academic styling
+- **HTML5 & CSS3**: Modern styling
 - **JavaScript**: Interactive features
-- **Google Fonts**: Merriweather & Open Sans
+- **Google Fonts**: Space Grotesk
 
 ## 📦 Requirements
 
@@ -99,13 +136,10 @@ cd platform-plagiarisme
 pip install -r requirements.txt
 
 # Install Tesseract OCR
-# Install Tesseract OCR
 # Download dari: https://github.com/UB-Mannheim/tesseract/wiki
-# Install ke: C:\Program Files\Tesseract-OCR\ (atau sesuaikan path instalasi)
 
 # Install Poppler
 # Download dari: https://github.com/oschwartz10612/poppler-windows/releases/
-# Extract ke folder yang diinginkan, misal: C:\Program Files\poppler\
 ```
 
 #### Linux/Mac
@@ -124,22 +158,13 @@ brew install poppler  # macOS
 
 ### 3. Setup Environment Variables
 
-Sesuaikan path di `file_parser.py` jika lokasi instalasi berbeda dari default:
+Sesuaikan path di `file_parser.py` jika lokasi instalasi berbeda:
 ```python
-# Tesseract Configuration
-# Sesuaikan dengan lokasi instalasi Tesseract di komputer Anda
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-os.environ['TESSDATA_PREFIX'] = r'C:\Program Files\Tesseract-OCR\tessdata'
-
-# Poppler Configuration  
-# Sesuaikan dengan lokasi folder bin Poppler
 POPPLER_PATH = r'C:\Program Files\poppler\Library\bin'
 ```
 
-### 4. Inisialisasi Database
-Database akan otomatis dibuat saat pertama kali menjalankan aplikasi.
-
-### 5. Jalankan Aplikasi
+### 4. Jalankan Aplikasi
 ```bash
 python app.py
 ```
@@ -156,34 +181,19 @@ Akses di browser: `http://127.0.0.1:5000`
 
 ## 📖 Cara Penggunaan
 
-### Login
-1. Buka `http://127.0.0.1:5000`
-2. Login dengan credentials admin atau register user baru
-3. Klik icon mata untuk show/hide password
-
-### Deteksi Plagiarisme
+### Compare (2 Dokumen)
 1. Login ke dashboard
-2. Masukkan/upload dokumen **Suspect** (dokumen mahasiswa)
-3. Masukkan/upload dokumen **Source** (dokumen referensi)
-4. Klik tombol **Cek Plagiarisme**
-5. Lihat hasil:
-   - **Similarity Score**: Persentase kesamaan (%)
-   - **Matched Phrases**: Daftar n-gram yang cocok
-   - **Visual Highlights**: Dokumen dengan kotak merah pada bagian plagiat
+2. Masukkan/upload dokumen **Jawaban Mahasiswa**
+3. Masukkan/upload dokumen **Kunci Jawaban/Jawaban lainnya**
+4. Klik **Cek Plagiarisme**
+5. Lihat hasil: Similarity Score, Visual Highlights, Matched Phrases
 
-### Download Hasil
-- Klik tombol **Download Highlighted Images** untuk mengunduh semua halaman yang sudah di-highlight
-
-### User Profile
-1. Klik **Profile** di navigation bar
-2. Edit nama atau ubah password
-3. Simpan perubahan
-
-### Admin Features (Admin Only)
-1. Klik **Admin** di navigation bar
-2. Lihat statistik users
-3. Toggle role user (Admin ↔ User)
-4. Hapus user (kecuali diri sendiri)
+### Multi Compare (Batch)
+1. Klik menu **Multi Compare**
+2. Upload 2-30 file dokumen
+3. Klik **Jalankan Perbandingan**
+4. Lihat statistik dan daftar semua perbandingan
+5. Klik pasangan untuk melihat detail dengan highlight
 
 ## 📁 Struktur Project
 
@@ -197,87 +207,47 @@ platform-plagiarisme/
 ├── preprocessing.py            # Text preprocessing & stemming
 ├── file_parser.py             # File extraction & OCR
 ├── highlight_visualizer.py    # Visual highlighting logic
+├── text_highlighter.py        # Text highlighting for web
+├── batch_comparison.py        # Batch comparison logic
 ├── requirements.txt           # Python dependencies
 ├── plagiarism.db             # SQLite database
 │
 ├── static/
 │   ├── style.css             # CSS styling
-│   └── uploads/
-│       └── highlighted/      # Highlighted images storage
+│   └── uploads/              # Uploaded & highlighted images
 │
 └── templates/
-    ├── base.html             # Base template
+    ├── base.html             # Base template dengan hamburger menu
     ├── login.html            # Login page
     ├── register.html         # Registration page
-    ├── dashboard.html        # Main dashboard
+    ├── dashboard.html        # Compare page
+    ├── batch.html            # Multi Compare page
+    ├── batch_detail.html     # Batch comparison detail
     ├── profile.html          # User profile
     └── admin_users.html      # Admin user management
 ```
 
-## 🎯 Algoritma Rabin-Karp
+## 🎯 Algoritma Rabin-Karp K-Gram
 
 Platform ini menggunakan **Rabin-Karp algorithm** dengan konfigurasi:
-- **N-gram size (k)**: 5 words
+- **K-Gram size**: 5 words
 - **Rolling hash**: Polynomial hashing
 - **Base**: 101 (prime number)
 - **Modulo**: 10^9 + 9
 
 ### Cara Kerja:
 1. **Preprocessing**: Stemming dan cleaning teks
-2. **N-gram Generation**: Buat n-gram dari suspect dan source  
-3. **Hashing**: Hash setiap n-gram menggunakan rolling hash
+2. **K-Gram Generation**: Buat K-Gram dari kedua dokumen
+3. **Hashing**: Hash setiap K-Gram menggunakan rolling hash
 4. **Matching**: Compare hash values untuk deteksi kesamaan
 5. **Similarity Calculation**: Hitung persentase kesamaan
-
-## 🖼️ OCR & Highlighting
-
-### OCR Pipeline:
-1. Convert PDF/gambar ke format yang bisa di-process
-2. Preprocessing gambar (grayscale, contrast enhancement)
-3. Extract text dengan `pytesseract.image_to_data` (dengan bounding boxes)
-4. Build word-to-box mapping
-
-### Highlighting Pipeline:
-1. Match n-gram phrases dengan OCR words
-2. Find bounding boxes untuk matched phrases
-3. Merge consecutive boxes
-4. Draw red rectangles pada gambar
-5. Save highlighted images
 
 ## 🔒 Security Features
 
 - **Password Hashing**: Werkzeug bcrypt hashing
 - **Session Management**: Flask-Login secure sessions
-- **CSRF Protection**: Built-in Flask CSRF
 - **Route Protection**: `@login_required` decorator
 - **Admin Protection**: Role-based access control
-- **Self-Protection**: Admin tidak bisa delete/edit diri sendiri
-
-## 🎨 Design Highlights
-
-- **Academic Professional Style**: Clean dan formal
-- **Responsive Design**: Mobile-friendly layout
-- **Large Input Fields**: Better UX dengan padding 16px
-- **Password Toggle**: Eye icon untuk show/hide password
-- **Visual Feedback**: Hover effects dan transitions
-- **Color Scheme**: 
-  - Primary: Academic Blue (#003366)
-  - Accent: Gold (#d4af37)
-  - Danger: Red untuk highlights
-
-## 📊 Database Schema
-
-**Users Table:**
-```sql
-- id (INTEGER PRIMARY KEY)
-- email (VARCHAR UNIQUE NOT NULL)
-- password_hash (VARCHAR)
-- name (VARCHAR NOT NULL)
-- role (VARCHAR DEFAULT 'user')
-- profile_picture (VARCHAR)
-- created_at (DATETIME)
-- last_login (DATETIME)
-```
 
 ## 🐛 Troubleshooting
 
@@ -297,30 +267,14 @@ pip install -r requirements.txt
 # Install Poppler dan set POPPLER_PATH di file_parser.py
 ```
 
-### Database error
-```bash
-# Delete plagiarism.db dan restart aplikasi
-rm plagiarism.db
-python app.py
-```
-
 ## 📝 License
 
 This project is created for academic purposes at Fakultas Ilmu Komputer.
 
 ## 👨‍💻 Author
 
-- **Platform Development**: Custom plagiarism detection system
-- **Algorithms**: Rabin-Karp, Preprocessing, OCR Integration
-- **Frontend**: Professional academic design
-
-## 🙏 Credits
-
-- **PySastrawi**: Indonesian text stemming
-- **Tesseract OCR**: Text extraction
-- **Flask**: Web framework
-- **Rabin-Karp Algorithm**: Michael O. Rabin & Richard M. Karp
+**Dimas Tri M** - Platform Detektor Plagiarisme © 2025
 
 ---
 
-**Platform Detektor Plagiarisme** - Dimas Tri M © 2025
+**Platform Detektor Plagiarisme** - Deteksi Plagiarisme dengan Rabin-Karp K-Gram
