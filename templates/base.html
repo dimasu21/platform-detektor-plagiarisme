@@ -58,7 +58,27 @@
         <div class="container">
             <p>© 2025 Dimas Tri M. All rights reserved.</p>
         </div>
+        <button id="wireframe-toggle" onclick="toggleWireframe()">🖥 Wireframe Mode</button>
     </footer>
+
+    <!-- Wireframe Mode Logic -->
+    <link id="wireframe-css" rel="stylesheet" href="{{ url_for('static', filename='css/wireframe.css') }}" disabled>
+    <script>
+        // Check local storage
+        if (localStorage.getItem('wireframeMode') === 'active') {
+            document.body.classList.add('wireframe-mode');
+            document.getElementById('wireframe-css').disabled = false;
+        }
+
+        function toggleWireframe() {
+            const body = document.body;
+            const css = document.getElementById('wireframe-css');
+            const isActive = body.classList.toggle('wireframe-mode');
+
+            css.disabled = !isActive;
+            localStorage.setItem('wireframeMode', isActive ? 'active' : 'inactive');
+        }
+    </script>
 
     <script>
         // Hamburger menu toggle

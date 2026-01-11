@@ -170,7 +170,7 @@ def dashboard():
                 result = None
             else:
                 # Detect plagiarism
-                result = detect_plagiarism(suspect_processed, source_processed, k=5)
+                result = detect_plagiarism(suspect_processed, source_processed, k=3)
                 
                 # Generate highlighted text for visual comparison
                 if result['matches']:

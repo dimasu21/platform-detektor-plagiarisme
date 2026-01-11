@@ -13,7 +13,7 @@
                 <div class="input-box">
                     <label for="suspect_text">Jawaban Mahasiswa</label>
                     <div class="input-options">
-                        <textarea id="suspect_text" name="suspect_text"
+                        <textarea id="suspect_text" name="suspect_text" spellcheck="false"
                             placeholder="Tempel jawaban mahasiswa di sini..."></textarea>
                         <div class="file-upload-wrapper">
                             <span class="or-divider">ATAU Unggah File (.docx, .pdf, .txt, .png, .jpg)</span>
@@ -25,7 +25,7 @@
                 <div class="input-box">
                     <label for="source_text">Kunci Jawaban/Jawaban lainnya</label>
                     <div class="input-options">
-                        <textarea id="source_text" name="source_text"
+                        <textarea id="source_text" name="source_text" spellcheck="false"
                             placeholder="Tempel sumber referensi atau kunci jawaban lainnya disini..."></textarea>
                         <div class="file-upload-wrapper">
                             <span class="or-divider">ATAU Unggah File (.docx, .pdf, .txt, .png, .jpg)</span>
@@ -91,7 +91,7 @@
                     </div>
 
                     <div class="text-panel source-panel">
-                        <h5>📚 Sumber Referensi</h5>
+                        <h5>📚 Jawaban Lainnya</h5>
                         <div class="text-content">
                             {{ source_highlighted|safe }}
                         </div>
@@ -103,10 +103,10 @@
             {% if suspect_images or source_images %}
             <div class="visual-results">
                 <h4>📄 Dokumen dengan Sorotan Plagiarisme</h4>
-                <p class="highlight-legend">
+                <p class="highlight-legend" style="font-weight: bold;">
                     <span class="legend-box"
                         style="background: rgba(255,0,0,0.3); border: 2px solid red; display: inline-block; width: 20px; height: 12px; border-radius: 4px;"></span>
-                    Kotak merah = Plagiarisme terdeteksi
+                    Kotak <span class="mode-text-normal">merah</span><span class="mode-text-wireframe" style="display: none;">hitam</span> = Plagiarisme terdeteksi
                 </p>
 
                 <div class="documents-grid">
@@ -130,12 +130,12 @@
 
                     {% if source_images %}
                     <div class="document-column">
-                        <h5>Sumber Referensi</h5>
+                        <h5>Jawaban Lainnya</h5>
                         <div class="document-images">
                             {% for image_path in source_images %}
                             <div class="document-page">
                                 <img src="{{ url_for('static', filename=image_path) }}"
-                                    alt="Halaman Sumber {{ loop.index }}">
+                                    alt="Halaman Jawaban Lain {{ loop.index }}">
                                 <span class="page-number">Halaman {{ loop.index }}</span>
                             </div>
                             {% endfor %}

@@ -1,15 +1,15 @@
 import docx
-from PyPDF2 import PdfReader
+from pypdf import PdfReader
 from PIL import Image
 import pytesseract
 from pdf2image import convert_from_bytes
 import os
 
 # Configure Tesseract path for Windows
-pytesseract.pytesseract.tesseract_cmd = r'D:\projectpribadi\tesseract.exe'
+pytesseract.pytesseract.tesseract_cmd = r'D:\projectpribadi\_installed_tesseract\tesseract.exe'
 
 # Configure Poppler path for Windows (for pdf2image)
-POPPLER_PATH = r'C:\Users\USER\AppData\Local\poppler-24.08.0\Library\bin'
+POPPLER_PATH = r'D:\projectpribadi\poppler-25.11.0\Library\bin'
 
 # Allowed file extensions
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'docx', 'png', 'jpg', 'jpeg'}

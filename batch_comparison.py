@@ -43,7 +43,7 @@ def compare_all_pairs(documents):
         text2_processed = preprocess_text(doc2['text'])
         
         # Run plagiarism detection
-        result = detect_plagiarism(text1_processed, text2_processed, k=5)
+        result = detect_plagiarism(text1_processed, text2_processed, k=3)
         
         pair_result = {
             'doc1_name': doc1['name'],
