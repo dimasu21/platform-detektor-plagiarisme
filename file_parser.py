@@ -137,6 +137,15 @@ def _extract_from_pdf(file_storage):
         
         extracted_text = '\n'.join(full_text).strip()
         
+        # CLEANUP: Fix common PDF line break issues
+        # 1. Join hyphenated words split across lines (e.g. "per- nyataan" -> "pernyataan")
+        extracted_text = extracted_text.replace('-\n', '')
+        # 2. Convert newlines to spaces to treat paragraphs as continuous blocks
+        extracted_text = extracted_text.replace('\n', ' ')
+        # 3. Collapse multiple spaces
+        import re
+        extracted_text = re.sub(r'\s+', ' ', extracted_text)
+        
         # If text is found and substantial, return it
         if len(extracted_text) > 50: 
             return extracted_text

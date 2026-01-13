@@ -15,7 +15,8 @@ suspect_proc = preprocess_text(suspect_raw)
 source_proc = preprocess_text(source_raw)
 
 print(f"--- Processed Texts ---")
-print(f"Suspect: {suspect_raw}") # Showing raw again for context, assuming preprocess_text doesn't change much
+print(f"Suspect Proc: '{suspect_proc}'")
+print(f"Source Proc:  '{source_proc}'")
 print("-" * 30)
 
 # Test with K=5 (Current Default)
@@ -35,3 +36,13 @@ print(f"\n--- Testing match with K=4 ---")
 result_k4 = detect_plagiarism(suspect_proc, source_proc, k=4)
 print(f"Score: {result_k4['similarity_score']}%")
 print(f"Matches: {result_k4['matches']}")
+
+# Test Jaccard (Bag of Words)
+print(f"\n--- Testing Jaccard Similarity ---")
+set1 = set(suspect_proc.split())
+set2 = set(source_proc.split())
+intersection = set1.intersection(set2)
+union = set1.union(set2)
+jaccard_score = (len(intersection) / len(union)) * 100 if union else 0.0
+print(f"Jaccard Score: {round(jaccard_score, 2)}%")
+print(f"Matching Words: {intersection}")

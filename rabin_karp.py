@@ -50,11 +50,31 @@ def detect_plagiarism(suspect_text, source_text, k=5):
             matches.append(ngram)
             match_count += 1
             
-    # Calculate similarity score
+    # Calculate similarity score (Rabin-Karp)
     # Formula: (Matches / Total Suspect N-grams) * 100
-    similarity_score = (match_count / len(suspect_ngrams)) * 100 if suspect_ngrams else 0.0
+    rk_score = (match_count / len(suspect_ngrams)) * 100 if suspect_ngrams else 0.0
+    
+    # --- HYBRID IMPROVEMENT: JACCARD SIMILARITY ---
+    # Calculates word overlap to detect paraphrasing
+    suspect_words = set(suspect_text.split())
+    source_words = set(source_text.split())
+    
+    # Filter short words to avoid noise in highlighting
+    intersection = {w for w in suspect_words.intersection(source_words) if len(w) > 3}
+    union = suspect_words.union(source_words)
+    
+    jaccard_score = (len(intersection) / len(union)) * 100 if union else 0.0
+    
+    print(f"DEBUG: RK Score: {rk_score:.2f}%, Jaccard Score: {jaccard_score:.2f}%")
+    
+    # Use the higher of the two scores
+    final_score = max(rk_score, jaccard_score)
+    
+    # If Jaccard is significantly helpful, add individual words to matches for highlighting
+    if jaccard_score > rk_score:
+        matches.extend(list(intersection))
     
     return {
-        "similarity_score": round(similarity_score, 2),
+        "similarity_score": round(final_score, 2),
         "matches": list(set(matches)) # Return unique matches
     }
