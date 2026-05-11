@@ -31,10 +31,10 @@ def create_default_admin():
     db.session.add(admin)
     db.session.commit()
     
-    print(f"Default admin created!")
+    print("Default admin created!")
     print(f"  Email: {admin_email}")
-    print(f"  Password: Admin123!")
-    print(f"  Please change the password after first login!")
+    print("  Password: Admin123!")
+    print("  Please change the password after first login!")
     
     return admin
 

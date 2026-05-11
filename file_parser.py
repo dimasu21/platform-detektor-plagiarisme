@@ -92,15 +92,15 @@ def extract_text_and_images_from_file(file_storage):
         if ext == 'pdf':
             # Extract text and images from PDF
             pdf_result = _extract_from_pdf_with_images(file_storage)
-            result['text'] = pdf_result['text']
-            result['images'] = pdf_result['images']
+            result['text'] = str(pdf_result['text'])
+            result['images'] = list(pdf_result['images'])
         elif ext in ['png', 'jpg', 'jpeg']:
             # For image files, extract text and keep the image
             image = Image.open(file_storage)
             processed_image = _preprocess_image_for_ocr(image)
             custom_config = r'--oem 3 --psm 1'
             text = pytesseract.image_to_string(processed_image, lang='ind+eng', config=custom_config)
-            result['text'] = text
+            result['text'] = str(text)
             result['images'] = [image]  # Keep original image, not preprocessed
         elif ext == 'docx':
             # DOCX doesn't have images to highlight
@@ -171,9 +171,9 @@ def _extract_from_pdf(file_storage):
             # Use PSM 1 (Automatic page segmentation with OSD)
             custom_config = r'--oem 3 --psm 1'
             text = pytesseract.image_to_string(processed_image, lang='ind+eng', config=custom_config)
-            ocr_text.append(text)
+            ocr_text.append(str(text))
             
-        return '\\n'.join(ocr_text)
+        return '\n'.join(ocr_text)
     except Exception as e:
         print(f"DEBUG: PDF OCR failed: {e}")
         return ""
@@ -200,10 +200,10 @@ def _extract_from_pdf_with_images(file_storage):
             # Use PSM 1 (Automatic page segmentation with OSD)
             custom_config = r'--oem 3 --psm 1'
             text = pytesseract.image_to_string(processed_image, lang='ind+eng', config=custom_config)
-            ocr_text.append(text)
+            ocr_text.append(str(text))
         
         return {
-            'text': '\\n'.join(ocr_text),
+            'text': '\n'.join(ocr_text),
             'images': images  # Return original images, not preprocessed ones
         }
     except Exception as e:

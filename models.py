@@ -1,11 +1,11 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, timezone
 
 db = SQLAlchemy()
 
-class User(UserMixin, db.Model):
+class User(UserMixin, db.Model):  # type: ignore[name-defined]
     """User model for authentication and profile management"""
     __tablename__ = 'users'
     
@@ -15,8 +15,12 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(100), nullable=False)
     role = db.Column(db.String(20), default='user')  # 'admin' or 'user'
     profile_picture = db.Column(db.String(200))  # URL or path to profile picture
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     last_login = db.Column(db.DateTime)
+    
+    def __init__(self, **kwargs):
+        """Explicit init to satisfy type checker for keyword arguments."""
+        super().__init__(**kwargs)
     
     def set_password(self, password):
         """Hash and set user password"""

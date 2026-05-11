@@ -178,8 +178,8 @@ def dashboard():
                     source_highlighted = highlight_text_matches(source_original, result['matches'])
                 else:
                     from html import escape
-                    suspect_highlighted = escape(suspect_original)
-                    source_highlighted = escape(source_original)
+                    suspect_highlighted = escape(str(suspect_original))
+                    source_highlighted = escape(str(source_original))
                 
                 # Generate unique session ID for this check
                 session_id = str(uuid.uuid4())[:8]
@@ -249,7 +249,7 @@ def profile():
                 flash('Current password is incorrect.', 'error')
             elif new_password != confirm_password:
                 flash('New passwords do not match.', 'error')
-            elif len(new_password) < 6:
+            elif not new_password or len(new_password) < 6:
                 flash('Password must be at least 6 characters long.', 'error')
             else:
                 current_user.set_password(new_password)
