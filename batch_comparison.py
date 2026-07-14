@@ -42,7 +42,7 @@ def compare_all_pairs(documents):
         text1_processed = preprocess_text(doc1['text'])
         text2_processed = preprocess_text(doc2['text'])
         
-        # Run plagiarism detection
+        # Deteksi plagiarisme menggunakan algoritma Rabin-Karp murni
         result = detect_plagiarism(text1_processed, text2_processed, k=3)
         
         pair_result = {

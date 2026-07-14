@@ -11,11 +11,11 @@
         <form method="POST" action="{{ url_for('batch_comparison') }}" class="detector-form"
             enctype="multipart/form-data">
             <div class="batch-upload-section">
-                <label for="documents">📁 Unggah Jawaban Mahasiswa</label>
+                <label for="documents">Unggah Jawaban Mahasiswa</label>
                 <p class="upload-hint">Pilih 2-30 file (.txt, .docx, .pdf, .png, .jpg)</p>
 
                 <div class="file-drop-zone" id="dropZone">
-                    <div class="drop-icon">📄</div>
+                    <div class="drop-icon"></div>
                     <p>Seret & lepas file di sini atau klik untuk memilih</p>
                     <input type="file" name="documents" id="documents" multiple accept=".txt,.docx,.pdf,.png,.jpg,.jpeg"
                         required>
@@ -24,14 +24,17 @@
                 <div class="selected-files" id="selectedFiles"></div>
             </div>
 
-            <div class="action-area">
+            <div class="action-area" style="display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 20px;">
                 <button type="submit" class="btn-primary btn-large"> Jalankan Perbandingan</button>
+                <div class="ocr-warning" style="font-size: 0.85rem; color: #856404; background-color: #fff3cd; padding: 10px 15px; border-radius: 8px; border: 1px solid #ffeeba; text-align: center; width: 100%; max-width: 600px;">
+                    <strong>ℹ️ Syarat & Ketentuan:</strong> Hasil ekstraksi teks pada dokumen gambar tulisan tangan mungkin tidak seakurat teks digital.
+                </div>
             </div>
         </form>
 
         {% if stats %}
         <div class="result-section">
-            <h3>📊 Hasil Perbandingan</h3>
+            <h3>Hasil Perbandingan</h3>
 
             <div class="stats-grid">
                 <div class="stat-card">
@@ -49,29 +52,29 @@
             </div>
 
             <div class="score-interpretation">
-                <h4>📋 Panduan Interpretasi Skor</h4>
+                <h4>Panduan Interpretasi Skor</h4>
                 <div class="interpretation-grid">
                     <div class="interpretation-item">
-                        <span class="level-badge high">🔴 90-100%</span>
+                        <span class="level-badge high">90-100%</span>
                         <span class="level-desc">Terindikasi kuat plagiarisme - Perlu ditinjau segera</span>
                     </div>
                     <div class="interpretation-item">
-                        <span class="level-badge medium">🟡 60-89%</span>
+                        <span class="level-badge medium">60-89%</span>
                         <span class="level-desc">Mencurigakan - Perlu investigasi lebih lanjut</span>
                     </div>
                     <div class="interpretation-item">
-                        <span class="level-badge low">🟢 30-59%</span>
+                        <span class="level-badge low">30-59%</span>
                         <span class="level-desc">Resiko rendah - Beberapa frasa umum terdeteksi</span>
                     </div>
                     <div class="interpretation-item">
-                        <span class="level-badge safe">✅ 0-29%</span>
+                        <span class="level-badge safe">0-29%</span>
                         <span class="level-desc">Aman - Minimal atau tidak ada plagiarisme</span>
                     </div>
                 </div>
             </div>
 
             <div class="all-pairs-section">
-                <h4>📝 Semua Perbandingan</h4>
+                <h4>Semua Perbandingan</h4>
                 <div class="pairs-list">
                     {% for pair in results.pairs %}
                     <a href="{{ url_for('batch_detail', pair_index=loop.index0) }}" class="pair-item">
@@ -80,7 +83,17 @@
                             <span class="separator">vs</span>
                             <span>{{ pair.doc2_name }}</span>
                         </div>
-                        <div class="pair-similarity">
+                        {% set sim = pair.similarity | float %}
+                        {% if sim >= 90 %}
+                            {% set badge_class = 'high' %}
+                        {% elif sim >= 60 %}
+                            {% set badge_class = 'medium' %}
+                        {% elif sim >= 30 %}
+                            {% set badge_class = 'low' %}
+                        {% else %}
+                            {% set badge_class = 'safe' %}
+                        {% endif %}
+                        <div class="pair-similarity level-badge {{ badge_class }}">
                             {{ pair.similarity }}%
                         </div>
                     </a>
@@ -199,8 +212,6 @@
         padding: 6px 16px;
         border-radius: var(--radius-full);
         font-size: 0.9rem;
-        background: var(--primary-dark);
-        color: white;
     }
 </style>
 

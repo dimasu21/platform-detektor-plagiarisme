@@ -38,3 +38,25 @@ class User(UserMixin, db.Model):  # type: ignore[name-defined]
     
     def __repr__(self):
         return f'<User {self.email}>'
+
+class ScanHistory(db.Model):  # type: ignore[name-defined]
+    """History of plagiarism scans"""
+    __tablename__ = 'scan_history'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    suspect_filename = db.Column(db.String(255), nullable=False)
+    method = db.Column(db.String(50), nullable=False)  # 'Single Check' or 'Batch Check'
+    score = db.Column(db.Float, nullable=False)
+    status = db.Column(db.String(20), nullable=False)  # 'Aman', 'Warning', 'Plagiat'
+    
+    # Relationship
+    user = db.relationship('User', backref=db.backref('scans', lazy=True))
+    
+    def __init__(self, **kwargs):
+        """Explicit init to satisfy type checker for keyword arguments."""
+        super().__init__(**kwargs)
+        
+    def __repr__(self):
+        return f'<ScanHistory {self.suspect_filename} ({self.score}%)>'

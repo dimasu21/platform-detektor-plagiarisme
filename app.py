@@ -2,11 +2,16 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from preprocessing import preprocess_text
 from rabin_karp import detect_plagiarism
-from models import db, User
+from models import db, User, ScanHistory
 from database import init_db, get_db_stats
 import os
 import uuid
 import time
+from datetime import datetime, timedelta, timezone
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -117,9 +122,58 @@ def logout():
 
 # ==================== AUTHENTICATED ROUTES ====================
 
-@app.route('/dashboard', methods=['GET', 'POST'])
+@app.route('/dashboard')
 @login_required
 def dashboard():
+    stats = get_db_stats()
+    
+    # Get 5 recent scans for the table
+    recent_scans_db = ScanHistory.query.order_by(ScanHistory.date.desc()).limit(5).all()
+    recent_scans = []
+    for scan in recent_scans_db:
+        # Convert UTC to local time (WIB / UTC+7) for display
+        local_date_obj = scan.date + timedelta(hours=7)
+        local_date = local_date_obj.strftime('%Y-%m-%d %H:%M')
+        recent_scans.append({
+            'id': scan.id,
+            'date': local_date,
+            'type': scan.method,
+            'suspect': scan.suspect_filename,
+            'score': scan.score,
+            'status': scan.status
+        })
+        
+    # Generate chart data for the last 7 days
+    chart_labels = []
+    scans_data = []
+    plagiat_data = []
+    
+    today = datetime.now(timezone.utc).date()
+    for i in range(6, -1, -1):
+        day = today - timedelta(days=i)
+        chart_labels.append(day.strftime('%d %b'))
+        
+        # Count scans on this day
+        next_day = day + timedelta(days=1)
+        day_scans = ScanHistory.query.filter(ScanHistory.date >= day, ScanHistory.date < next_day).all()
+        scans_data.append(len(day_scans))
+        
+        plagiat_count = sum(1 for s in day_scans if s.status in ['Plagiat', 'Warning'])
+        plagiat_data.append(plagiat_count)
+        
+    chart_data_scans = scans_data
+    chart_data_plagiat = plagiat_data
+
+    return render_template('dashboard_main.html', 
+                           stats=stats, 
+                           recent_scans=recent_scans,
+                           chart_labels=chart_labels,
+                           chart_data_scans=chart_data_scans,
+                           chart_data_plagiat=chart_data_plagiat)
+
+@app.route('/compare', methods=['GET', 'POST'])
+@login_required
+def compare():
     result = None
     suspect_images = []
     source_images = []
@@ -127,6 +181,8 @@ def dashboard():
     source_highlighted = ""
     suspect_original = ""
     source_original = ""
+    suspect_is_image = False
+    source_is_image = False
     
     if request.method == 'POST':
         from file_parser import extract_text_and_images_from_file
@@ -138,16 +194,24 @@ def dashboard():
         source_data = None
         
         # Handle Suspect Input
-        if 'suspect_file' in request.files and request.files['suspect_file'].filename != '':
-            suspect_data = extract_text_and_images_from_file(request.files['suspect_file'])
+        if 'suspect_file' in request.files and request.files['suspect_file'].filename:
+            suspect_file = request.files['suspect_file']
+            suspect_filename = suspect_file.filename or ""
+            suspect_ext = suspect_filename.rsplit('.', 1)[1].lower() if '.' in suspect_filename else ''
+            suspect_is_image = suspect_ext in ['png', 'jpg', 'jpeg']
+            suspect_data = extract_text_and_images_from_file(suspect_file)
         else:
             suspect_text = request.form.get('suspect_text', '')
             if suspect_text:
                 suspect_data = {'text': suspect_text, 'images': [], 'filename': 'manual_input'}
         
         # Handle Source Input
-        if 'source_file' in request.files and request.files['source_file'].filename != '':
-            source_data = extract_text_and_images_from_file(request.files['source_file'])
+        if 'source_file' in request.files and request.files['source_file'].filename:
+            source_file = request.files['source_file']
+            source_filename = source_file.filename or ""
+            source_ext = source_filename.rsplit('.', 1)[1].lower() if '.' in source_filename else ''
+            source_is_image = source_ext in ['png', 'jpg', 'jpeg']
+            source_data = extract_text_and_images_from_file(source_file)
         else:
             source_text = request.form.get('source_text', '')
             if source_text:
@@ -169,7 +233,7 @@ def dashboard():
                 flash('Teks tidak terbaca dari file.', 'error')
                 result = None
             else:
-                # Detect plagiarism
+                # Deteksi plagiarisme menggunakan algoritma Rabin-Karp murni
                 result = detect_plagiarism(suspect_processed, source_processed, k=3)
                 
                 # Generate highlighted text for visual comparison
@@ -199,6 +263,14 @@ def dashboard():
                         filepath = os.path.join('static', 'uploads', 'highlighted', filename)
                         save_highlighted_image(img, filepath)
                         suspect_images.append(f"uploads/highlighted/{filename}")
+                elif suspect_is_image and not result['matches']:
+                    # For image input with no matches, still save the original image
+                    from highlight_visualizer import save_highlighted_image as save_img
+                    for idx, img in enumerate(suspect_data['images']):
+                        filename = f"suspect_{session_id}_{timestamp}_page_{idx+1}.png"
+                        filepath = os.path.join('static', 'uploads', 'highlighted', filename)
+                        save_img(img, filepath)
+                        suspect_images.append(f"uploads/highlighted/{filename}")
                 
                 if source_data['images'] and result['matches']:
                     print(f"DEBUG: Highlighting {len(source_data['images'])} source images...")
@@ -213,6 +285,33 @@ def dashboard():
                         filepath = os.path.join('static', 'uploads', 'highlighted', filename)
                         save_highlighted_image(img, filepath)
                         source_images.append(f"uploads/highlighted/{filename}")
+                elif source_is_image and not result['matches']:
+                    # For image input with no matches, still save the original image
+                    from highlight_visualizer import save_highlighted_image as save_img
+                    for idx, img in enumerate(source_data['images']):
+                        filename = f"source_{session_id}_{timestamp}_page_{idx+1}.png"
+                        filepath = os.path.join('static', 'uploads', 'highlighted', filename)
+                        save_img(img, filepath)
+                        source_images.append(f"uploads/highlighted/{filename}")
+                        
+                # Record Scan History
+                status = 'Aman'
+                score = float(result['similarity_score']) # type: ignore
+                if score >= 90:
+                    status = 'Plagiat'
+                elif score >= 60:
+                    status = 'Warning'
+                    
+                new_scan = ScanHistory(
+                    user_id=current_user.id,
+                    suspect_filename=suspect_data['filename'][:255],
+                    method='Single Check',
+                    score=score,
+                    status=status
+                )
+                db.session.add(new_scan)
+                db.session.commit()
+                
         else:
             flash('Mohon masukkan teks atau unggah file untuk kedua kolom.', 'error')
             if not suspect_data or not suspect_data['text']:
@@ -220,12 +319,14 @@ def dashboard():
             if not source_data or not source_data['text']:
                 flash('Gagal mengekstrak teks dari Source File.', 'error')
         
-    return render_template('dashboard.html', 
+    return render_template('compare.html', 
                          result=result, 
                          suspect_images=suspect_images,
                          source_images=source_images,
                          suspect_highlighted=suspect_highlighted,
-                         source_highlighted=source_highlighted)
+                         source_highlighted=source_highlighted,
+                         suspect_is_image=suspect_is_image,
+                         source_is_image=source_is_image)
 
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
@@ -328,6 +429,23 @@ def batch_comparison():
     matrix = None
     doc_names = None
     
+    # Handle GET request - try to load previous results
+    batch_id = session.get('batch_id')
+    if batch_id and request.method == 'GET':
+        import json
+        batch_file_path = os.path.join('static', 'uploads', 'batch_results', f'{batch_id}.json')
+        if os.path.exists(batch_file_path):
+            try:
+                with open(batch_file_path, 'r', encoding='utf-8') as f:
+                    results = json.load(f)
+                stats = get_comparison_stats(results['pairs'])
+                suspicious = get_suspicious_pairs(results['pairs'], threshold=50)
+                matrix = results['matrix']
+                doc_names = results['document_names']
+            except Exception as e:
+                print(f"Error loading batch results: {e}")
+                results = None
+    
     if request.method == 'POST':
         from file_parser import extract_text_and_images_from_file
         
@@ -378,16 +496,41 @@ def batch_comparison():
         matrix = results['matrix']
         doc_names = results['document_names']
         
-        # Store results in session for detail view and back navigation
-        session['batch_results'] = results
-    else:
-        # GET request - try to load results from session
-        results = session.get('batch_results')
-        if results:
-            stats = get_comparison_stats(results['pairs'])
-            suspicious = get_suspicious_pairs(results['pairs'], threshold=50)
-            matrix = results['matrix']
-            doc_names = results['document_names']
+        # Save results to a JSON file instead of the session cookie
+        # (Session cookies have a 4KB limit and will silently fail to save large text data)
+        import json
+        batch_results_dir = os.path.join('static', 'uploads', 'batch_results')
+        os.makedirs(batch_results_dir, exist_ok=True)
+        
+        batch_file_path = os.path.join(batch_results_dir, f'{batch_id}.json')
+        with open(batch_file_path, 'w', encoding='utf-8') as f:
+            json.dump(results, f)
+            
+        # Store ONLY the batch_id in session for detail view and back navigation
+        session['batch_id'] = batch_id
+        
+        # Record Scan History for the batch
+        max_score = 0.0
+        if results['pairs']:
+            max_score = float(max([p['similarity'] for p in results['pairs']])) # type: ignore
+            
+        status = 'Aman'
+        if max_score >= 90:
+            status = 'Plagiat'
+        elif max_score >= 60:
+            status = 'Warning'
+            
+        new_scan = ScanHistory(
+            user_id=current_user.id,
+            suspect_filename=f"Batch: {len(documents)} docs",
+            method='Batch Check',
+            score=max_score,
+            status=status
+        )
+        db.session.add(new_scan)
+        db.session.commit()
+        
+
     
     return render_template('batch.html',
                          results=results,
@@ -402,8 +545,20 @@ def batch_detail(pair_index):
     from text_highlighter import highlight_text_matches
     from highlight_visualizer import highlight_plagiarism_in_images
     from PIL import Image
+    import json
     
-    results = session.get('batch_results')
+    batch_id = session.get('batch_id')
+    results = None
+    
+    if batch_id:
+        batch_file_path = os.path.join('static', 'uploads', 'batch_results', f'{batch_id}.json')
+        if os.path.exists(batch_file_path):
+            try:
+                with open(batch_file_path, 'r', encoding='utf-8') as f:
+                    results = json.load(f)
+            except Exception as e:
+                print(f"Error loading batch results for detail view: {e}")
+                
     if not results or pair_index >= len(results['pairs']):
         flash('Comparison data not found. Please run batch comparison again.', 'error')
         return redirect(url_for('batch_comparison'))
@@ -428,7 +583,8 @@ def batch_detail(pair_index):
         highlighted = highlight_plagiarism_in_images(pil_images, matches)
         
         for idx, img in enumerate(highlighted):
-            filename = f'highlighted_d1_{pair_index}_{idx}.png'
+            timestamp = int(time.time())
+            filename = f'highlighted_d1_{pair_index}_{idx}_{timestamp}.png'
             path = os.path.join('static', 'uploads', filename)
             os.makedirs(os.path.dirname(path), exist_ok=True)
             img.save(path, 'PNG')
@@ -439,7 +595,8 @@ def batch_detail(pair_index):
         highlighted = highlight_plagiarism_in_images(pil_images, matches)
         
         for idx, img in enumerate(highlighted):
-            filename = f'highlighted_d2_{pair_index}_{idx}.png'
+            timestamp = int(time.time())
+            filename = f'highlighted_d2_{pair_index}_{idx}_{timestamp}.png'
             path = os.path.join('static', 'uploads', filename)
             os.makedirs(os.path.dirname(path), exist_ok=True)
             img.save(path, 'PNG')

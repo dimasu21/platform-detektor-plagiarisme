@@ -1,4 +1,4 @@
-from models import db, User
+from models import db, User, ScanHistory
 from datetime import datetime
 
 def init_db(app):
@@ -44,8 +44,13 @@ def get_db_stats():
     admin_users = User.query.filter_by(role='admin').count()
     regular_users = User.query.filter_by(role='user').count()
     
+    total_scans = ScanHistory.query.count()
+    plagiarized_scans = ScanHistory.query.filter(ScanHistory.status.in_(['Plagiat', 'Warning'])).count()
+    
     return {
         'total_users': total_users,
         'admin_users': admin_users,
-        'regular_users': regular_users
+        'regular_users': regular_users,
+        'total_scans': total_scans,
+        'plagiarized_scans': plagiarized_scans
     }

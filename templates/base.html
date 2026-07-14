@@ -25,11 +25,12 @@
                 <span></span>
             </button>
             <nav class="header-nav" id="headerNav">
-                <a href="{{ url_for('dashboard') }}" class="nav-link">Compare</a>
-                <a href="{{ url_for('batch_comparison') }}" class="nav-link">Multi Compare</a>
-                <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+                <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">Dashboard</a>
+                <a href="{{ url_for('compare') }}" class="nav-link {% if request.endpoint == 'compare' %}active{% endif %}">Compare</a>
+                <a href="{{ url_for('batch_comparison') }}" class="nav-link {% if request.endpoint in ['batch_comparison', 'batch_detail'] %}active{% endif %}">Multi Compare</a>
+                <a href="{{ url_for('profile') }}" class="nav-link {% if request.endpoint == 'profile' %}active{% endif %}">Profile</a>
                 {% if current_user.is_admin() %}
-                <a href="{{ url_for('admin_users') }}" class="nav-link">Admin</a>
+                <a href="{{ url_for('admin_users') }}" class="nav-link {% if request.endpoint == 'admin_users' %}active{% endif %}">Admin</a>
                 {% endif %}
                 <div class="user-area">
                     <span class="user-greeting">{{ current_user.name }}</span>
@@ -58,6 +59,12 @@
 
 
 
+    <!-- Lightbox Modal -->
+    <div id="imageModal" class="modal">
+        <span class="close-modal">&times;</span>
+        <img class="modal-content" id="zoomedImage">
+    </div>
+
     <script>
         // Hamburger menu toggle
         const burgerMenu = document.getElementById('burgerMenu');
@@ -76,6 +83,42 @@
                     burgerMenu.classList.remove('active');
                     headerNav.classList.remove('active');
                 });
+            });
+        }
+
+        // Image Zoom Modal
+        const modal = document.getElementById("imageModal");
+        const modalImg = document.getElementById("zoomedImage");
+        const closeModal = document.querySelector(".close-modal");
+        const zoomableImages = document.querySelectorAll(".zoomable-image");
+
+        if (zoomableImages.length > 0 && modal && modalImg) {
+            zoomableImages.forEach(img => {
+                img.addEventListener('click', function() {
+                    modal.style.display = "flex";
+                    modalImg.src = this.src;
+                });
+            });
+
+            // Close modal when clicking on the close button
+            if (closeModal) {
+                closeModal.addEventListener('click', function() {
+                    modal.style.display = "none";
+                });
+            }
+
+            // Close modal when clicking outside the image
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.style.display = "none";
+                }
+            });
+
+            // Close modal on escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === "Escape" && modal.style.display === "flex") {
+                    modal.style.display = "none";
+                }
             });
         }
     </script>

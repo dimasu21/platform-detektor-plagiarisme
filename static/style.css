@@ -108,8 +108,10 @@ body {
     border: 1px solid transparent;
 }
 
-.nav-link:hover {
+.nav-link:hover,
+.nav-link.active {
     background-color: var(--bg-gray);
+    font-weight: 600;
 }
 
 .user-area {
@@ -541,6 +543,27 @@ input[type="file"] {
     padding: 2px 6px;
     border-radius: 4px;
     font-weight: 500;
+}
+
+/* ==================== IMAGE SOURCE NOTICE ==================== */
+
+.image-source-notice {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 24px;
+    background: linear-gradient(135deg, #EEF2FF, #E0E7FF);
+    border: 1px solid #C7D2FE;
+    border-radius: var(--radius-md);
+    color: #4338CA;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.image-source-notice .notice-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
 }
 
 /* ==================== VISUAL RESULTS (Images) ==================== */
@@ -1466,4 +1489,66 @@ input[type="file"] {
     .input-box {
         width: 100%;
     }
+}
+
+/* ==================== IMAGE ZOOM MODAL ==================== */
+
+.zoomable-image {
+    cursor: zoom-in;
+    transition: transform 0.2s ease;
+}
+
+.zoomable-image:hover {
+    transform: scale(1.02);
+    box-shadow: var(--shadow-md);
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.9);
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    margin: auto;
+    display: block;
+    max-width: 90%;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    animation: zoomIn 0.3s ease;
+}
+
+@keyframes zoomIn {
+    from {transform: scale(0.9); opacity: 0;}
+    to {transform: scale(1); opacity: 1;}
+}
+
+.close-modal {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+    z-index: 1001;
+}
+
+.close-modal:hover,
+.close-modal:focus {
+    color: var(--accent-lime);
+    text-decoration: none;
+    cursor: pointer;
 }

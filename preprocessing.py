@@ -20,6 +20,20 @@ def preprocess_text(text):
     if not text:
         return ""
 
+    # Custom Stopwords: Abaikan kata-kata di kop surat ujian
+    # Ini mencegah header terdeteksi sebagai plagiarisme
+    header_keywords = [
+        r'\bfakultas\b', r'\bteknik\b', r'\bilmu\b', r'\bkomputer\b', 
+        r'\buniversitas\b', r'\bpancasakti\b', r'\btegal\b',
+        r'\bujian\b', r'\bakhir\b', r'\bsemester\b', r'\bta\b',
+        r'\bnama\b', r'\bmata\b', r'\bkuliah\b', r'\bhari\b', r'\btgl\b', r'\btanggal\b',
+        r'\bpresensi\b', r'\bsks\b', r'\bkls\b', r'\bkelas\b', r'\btangan\b', r'\bno\b'
+    ]
+    
+    # Hapus kata-kata header dari teks mentah (case-insensitive)
+    for keyword in header_keywords:
+        text = re.sub(keyword, '', text, flags=re.IGNORECASE)
+
     # 1. Case Folding
     text = text.lower()
 

@@ -1,0 +1,341 @@
+IMPLEMENTASI ALGORITMA RABIN-KARP DAN TESSERACT OCR SEBAGAI DETEKTOR PLAGIARISME JAWABAN BERFORMAT PRINTED TEXT DAN CITRA 
+PADA PLATFORM UJIAN ONLINE BERBASIS WEB
+SKRIPSI
+Diajukan Sebagai Salah Satu Syarat Dalam Rangka Memenuhi
+Penyusunan Proposal Skripsi Jenjang S1
+Program Studi Informatika 
+oleh :
+DIMAS TRI MULYO
+NPM: 6622600059
+FAKULTAS TEKNIK DAN ILMU KOMPUTER 
+UNIVERSITAS PANCASAKTI TEGAL
+2025
+LEMBAR PERSETUJUAN NASKAH SKRIPSI
+Telah di setujui oleh dosen pembimbing untuk dipertahankkan di hadapan sidang dewan penguji skripsi Fakultas Teknik dan Ilmu Komputer Universitas Pancasakti Tegal.
+Hari         : 
+Tanggal   :	
+HALAMAN PENGESAHAN
+Telah dipertahankan dihadapan sidang Dewan Penguji Skripsi Fakultas Teknik dan Ilmu Komputer Universitas Pancasakti Tegal.
+Pada Hari	:
+Tanggal	:
+Ketua Penguji:
+Penguji Utama:
+Penguji 1
+Penguji 2
+HALAMAN PERNYATAAN
+Dalam penulisan skripsi ini saya tidak melakukan penjiplakan. Dengan ini, saya menyatakan bahwa skripsi yang berjudul “IMPLEMENTASI ALGORITMA RABIN-KARP DAN TESSERACT OCR SEBAGAI DETEKTOR PLAGIARISME JAWABAN BERFORMAT TEKS DAN CITRA PADA PLATFORM UJIAN ONLINE BERBASIS WEB” ini dan seluruh isinya adalah benar benar karya sendiri atau pengutipan dengan cara-cara yang tidak sesuai dengan etika yang berlaku dalam masyarakat keilmuan sebagaimana mestinya.
+Demikian pernyataan ini untuk dijadikan sebagai pedoman bagi yang berkepentingan dan saya siap menanggung segala risiko dan sanksi yang diberikan kepada saya apabila dikemudian hari ditemukan adanya pellanggaran atas etika keilmuan dalam karya tulis ini, atau adanya klaim atas karya tulis ini.
+
+
+
+
+MOTTO DAN PERSEMBAHAN
+MOTTO
+Arti dari sebuah pertarungan adalah hal untuk menentukan siapa yang bisa bertahan hingga akhir. Kekuatan bukan diukur dari seberapa sering kita menang, tetapi dari seberapa sering kita bangkit setelah terjatuh. Kesuksesan sejati lahir dari perjuangan panjang, keteguhan hati, dan keberanian untuk terus melangkah.
+PERSEMBAHAN
+Puji syukur penulis panjatkan ke hadirat Allah SWT atas limpahan rahmat, taufik, dan hidayah-Nya, sehingga penulis dapat menyelesaikan skripsi ini dengan baik dan lancar. Skripsi ini penulis persembahkan dan tujukan kepada:
+Allah SWT, sebagai sumber segala ilmu, kekuatan, dan ketenangan yang telah memberikan penulis kemampuan untuk menyelesaikan penelitian ini hingga akhir.
+Kedua orang tua tercinta, atas segala doa, dukungan, kasih sayang, dan pengorbanan yang tiada henti dalam memberikan semangat di setiap langkah penulis.
+Dosen Pembimbing I dan II, yang telah dengan sabar membimbing, memberikan arahan, masukan, dan motivasi selama proses penyusunan skripsi ini berlangsung.
+Teman-teman seperjuangan, yang senantiasa memberikan dukungan moral, berbagi pengalaman, dan membantu dalam berbagai hal selama penyusunan skripsi ini.
+Penulis menyadari bahwa tanpa doa, dukungan, dan bantuan dari semua pihak, penyusunan skripsi ini tidak akan berjalan dengan baik. Semoga segala kebaikan yang telah diberikan mendapatkan balasan yang setimpal dari Allah SWT.
+ABSTRAK
+Plagiarisme akademik pada lembar jawaban ujian fisik masih menjadi tantangan yang sulit dideteksi secara otomatis akibat keterbatasan teknologi pengenalan karakter tulisan tangan (Handwritten Text Recognition). Penelitian ini mengusulkan pengembangan Sistem Deteksi Plagiarisme hibrida yang mengintegrasikan algoritma Rabin-Karp dengan parameter k-Gram = 3 dan Vision AI (Gemini 1.5 API) sebagai modul ekstraktor teks dari dokumen citra. Penggunaan Vision AI ditujukan untuk mengatasi kelemahan tingkat akurasi Optical Character Recognition (OCR) konvensional yang sangat rendah ketika memproses guratan tulisan tangan manusia. Sistem dievaluasi melalui skenario pengujian komparatif antara dokumen teks murni dan citra digital. Hasil eksperimen menunjukkan bahwa pada pengujian berkas digital murni (.pdf), algoritma mampu memetakan kesamaan teks dengan tingkat presisi yang sangat tinggi tanpa kendala ekstraksi. Sementara itu, pada pengujian berkas citra tulisan tangan (.jpg), integrasi kecerdasan buatan terbukti secara signifikan mampu mengekstraksi teks di tengah gangguan distorsi visual (noise), sehingga algoritma tetap dapat menghitung skor kemiripan secara optimal. Lebih lanjut, implementasi fitur pemrosesan massal (Multi Compare) berhasil menekan waktu komputasi dalam komparasi silang antar banyak dokumen. Secara keseluruhan, platform ini efektif beroperasi sebagai Sistem Pendukung Keputusan (Decision Support System) yang memfasilitasi tenaga pendidik dalam memverifikasi orisinalitas secara cepat dan transparan melalui visualisasi kotak pembatas (bounding box).
+ABSTRACT
+Academic plagiarism in physical exam answer sheets remains a challenging issue to detect automatically due to the limitations of Handwritten Text Recognition technology. This study proposes the development of a hybrid Plagiarism Detection System that integrates the Rabin-Karp algorithm with a k-Gram = 3 parameter and Vision AI (Gemini 1.5 API) as a text extractor module from image documents. The utilization of Vision AI aims to overcome the extremely low accuracy of conventional Optical Character Recognition (OCR) when processing human handwriting. The system was evaluated through comparative testing scenarios between pure text documents and digital images. Experimental results demonstrated that in pure digital document testing (.pdf), the algorithm successfully mapped text similarities with a very high precision rate without extraction constraints. Meanwhile, in handwritten image file testing (.jpg), the integration of the artificial intelligence model proved significantly capable of extracting texts amidst visual distortion noises, allowing the algorithm to calculate similarity scores optimally. Furthermore, the implementation of a batch processing feature (Multi Compare) successfully reduced computational time during mass cross-comparisons. Overall, this platform operates effectively as a Decision Support System that facilitates educators in verifying originality quickly and transparently through coordinate-based bounding box visualizations.
+PRAKATA
+Segala puji dan syukur penulis panjatkan kepada Tuhan Yang Maha Esa yang telah memberikan petunjuk, taufik dan hidayah-Nya, sehingga penulis dapat menyelesaikan skripsi ini dengan judul “Implementasi Algoritma Rabin-Karp Dan Tesseract OCR sebagai Detektor Plagiarisme Jawaban Berformat Teks dan Citra pada Platform Ujian Online Berbasis Web.”
+Dalam penyusunan dan penulisan Proposal Skripsi ini tidak lepas dari bantuan dan bimbingan berbagai pihak. Dalam kesempatan ini penulis mengucapkan terimakasih yang sebesar-besarnya kepada :
+Bapak Dr. Agus Wibowo, ST. MT. selaku Dekan Fakultas Teknik dan Ilmu Komputer Universitas Pancasakti Tegal.
+Bapak Nur Tulus Ujianto, M.Kom selaku Dosen Pembimbing I.
+Bapak Ali Sofyan, M.Kom selaku Dosen Pembimbing II.
+Segenap Dosen dan Staf Fakultas Teknik dan Ilmu Komputer Universitas Pancasakti Tegal.
+Bapak dan ibuku yang tak pernah lelah mendoakanku.
+Teman-teman baik di kampus maupun di kantor lingkungan Hidup Kota Tegal yang telah memberikan dukungan moral dalam penyusunan skripsi ini.
+Semua pihak yang telah membantu hingga laporan ini selesai, semoga bantuan dan bimbingan yang telah diberikan mendapat balasan sesuai dari Allah SWT.
+Penulis menyadari bahwa proposal skripsi ini masih jauh dari kesempurnaan. Oleh karena itu, penulis sangat mengharapkan kritik dan saran yang membangun demi penyempurnaan penelitian ini di masa mendatang. Semoga proposal ini dapat memberikan manfaat bagi perkembangan ilmu pengetahuan, khususnya di bidang Teknik Informatika.
+DAFTAR ISI
+DAFTAR GAMBAR
+Gambar 1 Tahapan Text Preprocessing	13
+Gambar 2 Metode Waterfall	20
+Gambar 3 Text Preprocessing	26
+Gambar 4 Esktraksi OCR	27
+Gambar 5 Case Folding	27
+Gambar 6 Tokenizing & Cleaning	28
+Gambar 7 Filtering Stopword Removal	29
+Gambar 8 Diagram Pengujian Sistem	32
+Gambar 9 Diagram Alir Penelitian	33
+Gambar 10 Halaman Autentikasi Pengguna	36
+Gambar 11 Tampilan Halaman Utama	37
+Gambar 12 Halaman Uji Deteksi	38
+Gambar 13 Halaman Uji Deteksi Massal	39
+Gambar 14 Halaman Profile Pengguna dan Manajemen Akun.	40
+Gambar 15 Hasil analisis data .pdf	44
+Gambar 16 Teks yang disoroti	45
+Gambar 17 Highlight Visual	46
+Gambar 18 Hasil analisis data citra	47
+Gambar 19 Hasil analisis data citra	48
+Gambar 20 Hasil Kalkulasi Pemrosesan Massal	51
+Gambar 21 Hasil Perbandingan Persentase	52
+DAFTAR TABEL
+Tabel 1  Kode ASCII	12
+Tabel 2 Waktu Penelitian	22
+Tabel 3 Stemming	30
+Tabel 4 Pengujian Sistem Black Box Testing	42
+BAB I 
+PENDAHULUAN
+Latar Belakang
+Dalam satu dekade terakhir, sektor pendidikan mengalami transformasi signifikan seiring pesatnya kemajuan teknologi informasi. Salah satu perubahan mendasar adalah pergeseran metode evaluasi pembelajaran dari ujian berbasis kertas (Paper Based Test) menuju sistem terkomputerisasi atau Computer Based Test (CBT). Sistem ujian daring menawarkan efisiensi waktu dan fleksibilitas pengelolaan data yang tinggi. Namun, transisi digital ini juga membawa tantangan baru berupa ancaman integritas akademik. Minimnya pengawasan fisik secara langsung membuka celah bagi mahasiswa untuk melakukan kecurangan (academic fraud), seperti menyalin jawaban teman atau mengambil materi mentah dari internet tanpa parafrasa.
+Di Universitas Pancasakti Tegal sendiri, meskipun saat ini pelaksanaan ujian mayoritas masih menggunakan metode konvensional (tulis tangan pada kertas folio), tantangan efisiensi koreksi dan validasi orisinalitas jawaban menjadi kendala nyata bagi dosen. Proses penilaian manual terhadap ratusan berkas fisik membutuhkan waktu lama dan rentan terhadap ketidaktelitian manusia (human error). Oleh karena itu, transformasi menuju ujian berbasis komputer (CBT) menjadi kebutuhan mendesak di masa depan. Penelitian ini hadir untuk mengusulkan sebuah rancang bangun sistem deteksi plagiarisme sebagai langkah awal kesiapan infrastruktur digital, sehingga ketika kebijakan ujian daring diterapkan, institusi telah memiliki mekanisme pengawasan mutu yang andal.
+Permasalahan plagiarisme diperburuk dengan beragamnya format jawaban yang dapat dikumpulkan dalam ekosistem digital. Selain dokumen teks (seperti .doc atau .pdf), mahasiswa sering kali mengumpulkan jawaban dalam bentuk citra atau gambar, seperti tangkapan layar (screenshot) dari dokumen digital atau foto teks cetak, yang sering kali lolos dari deteksi plagiarisme biasa. Hal ini menjadi celah keamanan serius, karena sistem pendeteksi konvensional umumnya gagal memproses teks yang "terkunci" dalam format piksel gambar. Akibatnya, indikasi kemiripan jawaban antar mahasiswa sering kali luput dari pengamatan, yang pada akhirnya mencederai prinsip keadilan dalam evaluasi akademik.
+Sebagai solusi teknis untuk mengatasi permasalahan tersebut, penulis mengusulkan integrasi algoritma pencocokan string dengan teknologi pengenalan karakter optik. Algoritma Rabin-Karp dipilih sebagai metode deteksi kemiripan karena keunggulannya menggunakan teknik Rolling Hash yang efisien untuk membandingkan pola dalam dokumen panjang. Sementara itu, untuk mengatasi celah pada dokumen berbentuk gambar, diterapkan teknologi Optical Character Recognition (OCR) menggunakan mesin Tesseract. Teknologi ini berfungsi mengekstraksi teks dari dokumen citra agar dapat diproses lebih lanjut oleh algoritma deteksi.
+Meskipun teknologi OCR dan algoritma deteksi plagiarisme masing-masing sudah tersedia, implementasi keduanya yang terintegrasi dalam satu aplikasi berbasis web masih jarang ditemui. Pada umumnya, dosen harus melakukan proses manual dengan mengonversi gambar menjadi teks menggunakan aplikasi pihak ketiga, baru kemudian memeriksanya dengan tools plagiarisme. Proses ini sangat tidak efisien. Oleh karena itu, dibutuhkan sebuah sistem terpadu yang mampu mengotomatisasi alur tersebut—mulai dari penerimaan dokumen multi-format, ekstraksi teks, hingga perhitungan persentase kemiripan—tanpa memerlukan intervensi manual yang rumit.
+Selain itu, transparansi hasil deteksi juga menjadi aspek vital. Sistem tidak hanya dituntut memberikan angka persentase kemiripan, tetapi juga harus mampu memberikan visualisasi penandaan (highlight) pada bagian teks atau citra yang terindikasi plagiat. Fitur ini krusial untuk membantu dosen mengambil keputusan objektif berdasarkan bukti visual, bukan sekadar asumsi. Berdasarkan urgensi untuk menutup celah kecurangan berbasis gambar serta sebagai upaya digitalisasi sistem evaluasi kampus, penulis mengangkat judul Implementasi Algoritma Rabin-Karp dan Tesseract OCR sebagai Detektor Plagiarisme Dokumen Teks dan Citra pada Platform Ujian Online Berbasis Web.
+Batasan Masalah
+Agar penelitian ini lebih terarah dan fokus pada tujuan utama, penulis menetapkan batasan masalah sebagai berikut:
+Objek Penelitian: Sistem diimplementasikan pada kasus ujian esai berbahasa Indonesia.
+Algoritma Deteksi: Menggunakan algoritma Rabin-Karp dengan teknik Rolling Hash dan K-Gram  untuk pencocokan teks.
+Teknologi OCR: Menggunakan mesin Tesseract OCR untuk ekstraksi teks dari file (.docx, .pdf, .txt, .png, .jpg) dengan fokus pada karakter cetak komputer (printed text) atau tulisan tangan tegak bersambung yang terstandarisasi.
+Lingkup Deteksi: Deteksi dilakukan secara lokal (Local Comparison), yaitu membandingkan dokumen jawaban mahasiswa (Suspect) terhadap dokumen teman sekelas atau kunci jawaban (Source) yang ada di dalam database sistem.
+Pengembangan Sistem: Aplikasi dibangun berbasis web menggunakan framework Flask (Python) dan basis data SQLite.
+Rumusan Masalah
+Berdasarkan latar belakang yang telah diuraikan, maka rumusan masalah dalam penelitian ini adalah:
+Bagaimana merancang bangun aplikasi deteksi plagiarisme berbasis web yang mampu menerima dan memproses input dokumen jawaban dalam format teks (.docx, .pdf) maupun citra (.jpg, .png)?
+Bagaimana implementasi teknologi Tesseract OCR untuk mengekstraksi teks dari dokumen jawaban berbentuk gambar agar dapat dibaca oleh sistem?
+Bagaimana penerapan algoritma Rabin-Karp untuk menghitung persentase kemiripan (similarity score) dan menghasilkan visualisasi penandaan (highlight) pada area yang terindikasi plagiat?
+Tujuan dan Manfaat
+Tujuan Penelitian 
+Penelitian ini bertujuan mengembangkan aplikasi web untuk mendeteksi plagiarisme. Aplikasi ini bisa mengolah dokumen jawaban mahasiswa, baik teks maupun gambar. Teknologi yang digunakan adalah Pengenalan Karakter Optik (OCR) dan algoritma Rabin-Karp. Sistem ini diharapkan dapat mengekstraksi teks dari citra digital (seperti tangkapan layar atau hasil pindai teks cetak), menghitung kesamaan teks dengan teknik Rolling Hash, dan menampilkan hasilnya dalam persentase. Hasil akhir juga menunjukkan bagian dokumen yang mengandung plagiarisme, membantu dosen memeriksa keaslian jawaban dengan lebih efektif.
+Manfaat Penelitian
+Penelitian ini memberikan solusi efisiensi bagi dosen dalam mengoreksi jawaban esai, termasuk dokumen scan, melalui deteksi otomatis dan visualisasi plagiasi, sekaligus membantu institusi membangun arsip digital karya mahasiswa untuk mencegah kecurangan. Selain memfasilitasi mahasiswa untuk melakukan pengecekan mandiri demi menjaga orisinalitas karya, pengembangan sistem ini juga menjadi sarana bagi penulis untuk menerapkan keahlian teknis dalam algoritma Rabin-Karp dan teknologi Optical Character Recognition (OCR).
+a. Bagi Institusi Pendidikan:
+Menyediakan perangkat lunak mandiri (proprietary tool) untuk memverifikasi keaslian jawaban ujian (UTS/UAS) mahasiswa tanpa bergantung pada layanan berbayar pihak ketiga.
+Meningkatkan efisiensi proses koreksi dokumen fisik atau hasil scan berkat fitur integrasi OCR yang mendukung program paperless.
+Membangun basis data (repository) internal karya mahasiswa yang terdigitalisasi, sehingga dapat menjadi aset rujukan komprehensif untuk mencegah praktik plagiarisme antar-angkatan di masa mendatang.
+Mendukung kesiapan infrastruktur teknologi institusi dalam masa transisi dari metode evaluasi konvensional menuju penerapan ujian berbasis komputer (CBT) secara penuh.
+b. Bagi Dosen/Pengajar:
+Mempercepat proses koreksi jawaban esai dengan adanya fitur deteksi otomatis, sehingga efisiensi waktu penilaian meningkat signifikan dibandingkan cara manual.
+Memberikan alat bantu validasi yang objektif berupa persentase kemiripan untuk memperkuat bukti jika ditemukan indikasi plagiarisme pada jawaban mahasiswa.
+Meningkatkan kualitas evaluasi pembelajaran, di mana dosen dapat lebih fokus memberikan umpan balik pada substansi pemahaman mahasiswa yang orisinal, tanpa harus membuang energi untuk memverifikasi kecurangan satu per satu.
+c. Bagi Mahasiswa:
+Meningkatkan kesadaran akan pentingnya integritas akademik serta mendorong mahasiswa untuk lebih percaya diri mengerjakan tugas secara mandiri tanpa bergantung pada budaya copy-paste.
+Menyediakan sarana pengecekan mandiri (self-check) bagi mahasiswa sebelum mengumpulkan tugas, sehingga mereka dapat menghindari unsur plagiarisme yang tidak disengaja.
+d. Bagi Penulis:
+Menambah wawasan dan pengalaman praktis dalam mengimplementasikan algoritma String Matching (Rabin-Karp) dan Rolling Hash ke dalam kasus nyata pengembangan perangkat lunak.
+Mengasah kemampuan teknis dalam membangun aplikasi web modern (Full-stack Web Development) yang terintegrasi dengan teknologi pengolahan citra (Optical Character Recognition) dan basis data.
+Sistematika Penulisan
+Sistematika penulisan proposal skripsi ini disusun secara terstruktur menjadi tiga bab utama untuk memberikan gambaran menyeluruh rencana penelitian, yaitu:
+BAB I PENDAHULUAN 
+Bab ini memberikan gambaran umum mengenai dasar penelitian, yang meliputi latar belakang masalah, rumusan masalah yang akan diselesaikan, batasan masalah agar penelitian terarah, tujuan dan manfaat penelitian, serta sistematika penulisan proposal ini.
+BAB II LANDASAN TEORI DAN TINJAUAN PUSTAKA 
+Bab ini memuat teori-teori pendukung yang relevan dengan topik penelitian, mencakup konsep Plagiarisme, Natural Language Processing (NLP), Teknik Text Preprocessing (termasuk Kode ASCII dan Stemming), Algoritma Rabin-Karp, serta Optical Character Recognition (Tesseract). Selain itu, bab ini juga menyajikan tinjauan pustaka yang berisi kajian terhadap penelitian-penelitian terdahulu yang sejenis.
+BAB III METODOLOGI PENELITIAN 
+Bab ini menguraikan tahapan dan metode yang digunakan untuk menyelesaikan masalah penelitian secara rinci. Pembahasan meliputi metode penelitian yang dipilih (Waterfall), waktu dan tempat penelitian, variabel dan instrumen penelitian, metode pengumpulan data, analisis algoritma, skenario pengujian sistem (fungsional dan akurasi), serta diagram alir penelitian.
+DAFTAR PUSTAKA 
+Berisi daftar referensi buku, jurnal ilmiah, dan sumber lain yang dijadikan rujukan dalam penyusunan proposal.
+BAB II
+LANDASAN TEORI
+A. Landasan Teori
+Plagiarisme Akademik
+Secara etimologis, istilah plagiarisme berakar dari kata Latin 'plagiarius', yang bermakna penculik. Dalam konteks ilmiah dan akademik, tindakan ini diartikan sebagai perbuatan mengadopsi gagasan, pemikiran, maupun ciptaan pihak lain seolah-olah merupakan hasil pemikiran sendiri, tanpa mencantumkan sumber rujukan yang valid. Kemajuan teknologi digital saat ini mempermudah akses terhadap informasi, namun di sisi lain juga mempermudah praktik penyalinan teks (copy-paste) antar dokumen. Fenomena ini sering terjadi pada tugas mahasiswa di mana dokumen digital dapat dengan mudah dimodifikasi sedikit dan diklaim sebagai karya orisinal.
+Jenis-jenis plagiarisme yang umum ditemukan meliputi:
+Plagiarisme Verbatim: Menyalin kata demi kata secara langsung dari sumber asli tanpa menggunakan tanda kutip.
+Plagiarisme Mosaik: Menggabungkan potongan-potongan teks dari berbagai sumber yang berbeda menjadi satu kesatuan paragraf baru tanpa atribusi yang jelas.
+Self-Plagiarism: Menggunakan kembali karya sendiri yang sudah pernah dipublikasikan atau dikumpulkan sebelumnya untuk tugas baru (daur ulang karya).
+Pencegahan plagiarisme menjadi krusial dalam institusi pendidikan untuk menjaga mutu lulusan. Sistem deteksi otomatis sangat diperlukan karena pengecekan manual oleh manusia memiliki keterbatasan dalam hal memori dan konsentrasi, terutama ketika harus membandingkan ratusan dokumen sekaligus.
+Natural Language Processing (NLP)
+Pemrosesan Bahasa Alami atau NLP didefinisikan sebagai sub-bidang AI yang menjembatani komunikasi antara perangkat komputer dengan bahasa manusia. Pada penelitian ini, NLP berfungsi sebagai mesin utama untuk menganalisis struktur dokumen agar tingkat kesamaannya dapat dihitung. Proses ini mensyaratkan adanya tahapan pembersihan data (preprocessing) di awal untuk membuang karakter sampah atau noise, sehingga teks siap diproses oleh algoritma.
+Kode ASCII (American Standard Code for Information Interchange)
+Dalam pemrosesan teks digital, komputer tidak menyimpan huruf atau karakter secara harfiah, melainkan menyimpannya sebagai rangkaian angka biner. Agar komunikasi data antar perangkat seragam, diperlukan standar pengkodean karakter. Standar yang paling umum digunakan dalam algoritma pencocokan string adalah ASCII (American Standard Code for Information Interchange).
+Kode ASCII merepresentasikan setiap karakter (huruf, angka, dan simbol) dengan nilai numerik desimal 7-bit yang unik. Nilai ini menjadi input krusial bagi algoritma Rabin-Karp, di mana teks harus dikonversi menjadi angka terlebih dahulu sebelum dapat dihitung nilai hash-nya. Sebagai contoh, dalam tabel ASCII standar, huruf kapital dan huruf kecil memiliki nilai desimal yang berbeda jauh.
+Tabel 1  Kode ASCII
+Pra-pemrosesan Citra
+Pra-pemrosesan citra (Image Preprocessing) adalah tahapan awal dalam pengolahan citra digital yang bertujuan untuk meningkatkan kualitas gambar sebelum dilakukan analisis atau ekstraksi informasi lebih lanjut. Dalam konteks sistem Optical Character Recognition (OCR), image preprocessing sangat krusial karena mesin OCR tradisional sangat sensitif terhadap kualitas gambar input. Gambar yang diambil menggunakan kamera ponsel seringkali memiliki masalah seperti rotasi yang miring (skew), pencahayaan yang tidak merata, kontras yang rendah, serta adanya noise atau bintik gangguan.
+Untuk mengatasi permasalahan tersebut, terdapat beberapa teknik preprocessing yang umum digunakan. Pertama, Deskew atau koreksi kemiringan, yang berfungsi meluruskan kemiringan rotasi dokumen menggunakan algoritma seperti Hough Line Transform. Kedua, Contrast Limited Adaptive Histogram Equalization (CLAHE), sebuah teknik untuk meningkatkan kontras secara lokal pada bagian-bagian gelap citra agar pencahayaan menjadi lebih merata tanpa menghilangkan detail. Ketiga, Bilateral Filtering, yang bertujuan untuk menghaluskan citra dan menghilangkan noise namun tetap mempertahankan ketajaman tepi (edge-preserving), sehingga bentuk geometri huruf tetap utuh.
+Tahap akhir yang paling vital dalam pra-pemrosesan OCR adalah Binarisasi Adaptif (Adaptive Binarization). Proses ini mengonversi citra berwarna atau grayscale menjadi citra biner (hanya memiliki nilai piksel hitam dan putih murni). Berbeda dengan thresholding global yang menggunakan satu nilai ambang batas untuk seluruh area, adaptive binarization menghitung ambang batas secara dinamis berdasarkan intensitas piksel tetangga di sekitarnya. Hal ini memungkinkan sistem untuk memisahkan objek tulisan (foreground) dari warna kertas latar belakang (background) dengan sangat presisi, bahkan pada kondisi pencahayaan gambar yang buruk.
+Tahapan Text Preprocessing
+Agar algoritma Rabin-Karp dapat bekerja optimal, dokumen jawaban mahasiswa harus melalui serangkaian proses pembersihan. tahapan standar dalam preprocessing teks Bahasa Indonesia meliputi:
+Gambar  1 Tahapan Text Preprocessing
+Case Folding 
+Tahap Case Folding merupakan fase standarisasi teks yang berfungsi untuk mengonversi seluruh karakter kapital dalam dokumen menjadi huruf kecil (lowercase). Proses penyeragaman ini sangat krusial agar mesin dapat mengidentifikasi bahwa variasi penulisan seperti 'Algoritma', 'ALGORITMA', dan 'algoritma' adalah entitas data yang sama persis.
+Tokenizing
+Tahap Tokenizing melibatkan prosedur pemecahan struktur kalimat (parsing) menjadi unit-unit teks terpisah yang dikenal sebagai token. Umumnya, proses segmentasi ini memanfaatkan karakter spasi, tab, atau pergantian baris sebagai pemisah (delimiter). Tidak hanya memilah kata, tahapan ini sekaligus mengeliminasi elemen non-alfanumerik, seperti tanda baca (punctuation), yang dianggap tidak berkontribusi signifikan terhadap konteks analisis.
+Filtering (Stopword Removal)
+Proses Filtering bertujuan untuk menyeleksi kata-kata substantif dari daftar token yang telah terbentuk. Kosakata yang terlalu sering muncul namun minim makna spesifik (common words atau stopwords) akan dihapus dari data. Sebagai ilustrasi dalam Bahasa Indonesia, kata penghubung seperti 'yang', 'dan', 'di', serta 'adalah' masuk dalam kategori ini. Eliminasi kata-kata tersebut dilakukan guna menghemat sumber daya komputasi serta menajamkan akurasi deteksi pada topik utama.
+Stemming
+Stemming adalah proses transformasi kata berimbuhan menjadi kata dasarnya (root word). Dalam Bahasa Indonesia, algoritma yang umum digunakan adalah algoritma Nazief & Adriani. Algoritma ini bekerja dengan aturan morfologi untuk menghapus awalan (prefix), sisipan (infix), dan akhiran (suffix) secara bertahap sehingga kata seperti "menggunakan" dapat dikembalikan menjadi kata dasar "guna".
+Algoritma Rabin-Karp
+Metode Rabin-Karp adalah salah satu teknik pencocokan string yang memanfaatkan nilai hash untuk mengidentifikasi keberadaan pola tertentu di dalam teks. Pendekatan ini menawarkan efisiensi yang lebih baik dibandingkan metode Brute Force, karena tidak membandingkan karakter satu per satu, melainkan membandingkan nilai hash antar potongan teks. Komponen utama dalam algoritma ini meliputi:
+K-Gram (N-Gram) 
+K-Gram adalah teknik pemotongan teks menjadi potongan karakter atau kata sepanjang k. Metode ini mengambil potongan karakter secara kontinyu dari awal hingga akhir dokumen. Contoh k=5: "SISTEM"  "SISTE", "ISTEM".
+Rolling Hash
+Kekuatan utama Rabin-Karp terletak pada teknik Rolling Hash. Teknik ini memungkinkan perhitungan nilai hash selanjutnya dilakukan dengan menggeser jendela (window) karakter tanpa harus menghitung ulang seluruh karakter dari nol, melainkan cukup dengan membuang nilai karakter awal dan menambahkan nilai karakter baru yang masuk.
+Dice's Similarity Coefficient 
+Setelah susunan hash dari kedua dokumen berhasil diekstrak dan dibandingkan melalui algoritma Rabin-Karp, langkah terakhir adalah menghitung tingkat kesamaannya dalam bentuk metrik persentase. Penelitian ini menggunakan formula Dice's Similarity Coefficient (Koefisien Sørensen–Dice) untuk mengukur kemiripan dua himpunan data (set). Rumus yang digunakan adalah sebagai berikut:
+S = (2 × C) / (A + B) × 100%
+Keterangan: S = Persentase kemiripan skor akhir (0% - 100%) C = Jumlah nilai hash yang sama (beririsan) antara kedua dokumen A = Total keseluruhan hash pada dokumen jawaban mahasiswa B = Total keseluruhan hash pada dokumen kunci jawaban. Metode koefisien ini sangat ideal dipadukan dengan algoritma Rabin-Karp karena formula ini secara adil menghitung proporsi irisan data terhadap total bobot keseluruhan dari kedua dokumen, sehingga perbedaan panjang atau pendeknya jawaban mahasiswa dapat dinilai secara objektif.
+B. Tinjauan Pustaka
+Penelitian ini disusun berdasarkan referensi dari penelitian sebelumnya yang relevan dalam lima tahun terakhir (2021 - 2025). Tujuan dari kajian ini adalah untuk mengidentifikasi metode yang telah digunakan, hasil yang dicapai, serta menemukan celah penelitian yang bisa diisi oleh studi ini. Berikut adalah ringkasan dari sepuluh penelitian yang menjadi sumber utama:
+Pertama-tama, mengenai pentingnya sistem keamanan di masa digital, (Dewi & Werastuti, 2022) dari Universitas Pendidikan Ganesha, Singaraja, Bali, mengungkap bahwa pembelajaran dan ujian online memberikan kesempatan yang luas bagi mahasiswa untuk berbuat kecurangan akademik karena kurangnya pengawasan fisik. Temuan ini membuktikan bahwa fitur deteksi plagiarisme di platform ujian bukanlah sekadar tambahan, melainkan suatu keharusan untuk menjaga integritas akademik.
+Mengenai solusi otomatisasi yang sudah ada, (Sihombing, 2022) dari Institut Teknologi dan Bisnis Sabda Setia, Pontianak, mengembangkan sistem penilaian esai otomatis dengan menggunakan pendekatan NLP. Riset mereka menunjukkan bahwa penggunaan sistem berbasis komputer sangat efisien dalam mengurangi waktu yang dibutuhkan dosen untuk mengoreksi dan memastikan objektivitas penilaian sehingga terhindar dari kesalahan akibat kelelahan manusia.
+Dalam konteks solusi teknis untuk mendeteksi kesamaan, (Aldian & Mubarak, 2022) dari Universitas Pamulang, Tangerang, meneliti penerapan algoritma Rabin-Karp untuk mengidentifikasi kesamaan teks dalam dokumen digital berbasis web. Hasil penelitian ini menunjukkan bahwa algoritma tersebut memiliki kinerja komputasi yang efisien untuk mencocokkan string dalam volume besar. Namun, sistem yang mereka buat masih terbatas pada dokumen teks (.pdf/.docx) dan belum dapat mengenali teks dari format gambar.
+Untuk memperkuat efektivitas algoritma di konteks akademik, (Gunawan, 2021) dari Universitas Singaperbangsa Karawang menggunakan algoritma Rabin-Karp khusus untuk mengidentifikasi plagiarisme dalam abstrak skripsi. Penelitian mereka menunjukkan bahwa algoritma Rabin-Karp berfungsi secara optimal dalam mendeteksi pola kalimat akademik, dengan akurasi rata-rata deteksi kemiripan mencapai 86,84% ketika menggunakan K-Gram 2.
+Untuk lebih mendukung pemilihan algoritma, penulis merujuk pada penelitian komparatif oleh (Arnawa, 2021) dari Institut Teknologi Dan Bisnis STIKOM Bali, Denpasar. Dalam penelitiannya, ia membandingkan algoritma Rabin-Karp dan Winnowing untuk mengidentifikasi kesamaan pekerjaan mahasiswa. Hasilnya menunjukkan bahwa Rabin-Karp menunjukkan performa yang lebih baik dengan tingkat deteksi mencapai 86,87%, sementara Winnowing hanya mendapatkan 64,4% pada data uji yang sama.
+Selanjutnya, mengenai usaha untuk mengoptimalkan algoritma, (Herman, 2024) dari STMIK Time Medan menunjukkan bahwa penerapan Rabin-Karp tanpa preprocessing yang sesuai sering kurang akurat. Dalam penelitian ini, mereka membuktikan bahwa penggabungan Rabin-Karp dengan Stemmer Sastrawi (berbasis Nazief-Adriani) dapat meningkatkan keakuratan deteksi plagiarisme dalam jurnal skripsi hingga 80% dengan waktu eksekusi rata-rata 25,69 detik.
+Terkait teknik preprocessing untuk Bahasa Indonesia, (Damayanti, 2022) dari Universitas Budi Darma, Medan, dalam kajiannya tentang deteksi kemiripan karya tulis ilmiah, menyimpulkan bahwa algoritma Nazief-Adriani menawarkan akurasi yang lebih baik dibandingkan dengan algoritma stemming lainnya. Hal ini disebabkan oleh aturan morfologi yang komprehensif dari algoritma tersebut yang mampu menangani berbagai variasi imbuhan yang rumit dalam Bahasa Indonesia.
+Untuk mengatasi kekurangan dalam dokumen gambar, (Maesaroh & Iqbal, 2023) dari Universitas Mercu Buana, Jakarta, menekankan efektivitas mesin Tesseract OCR sebagai salah satu alat open-source paling presisi dalam mengenali karakter. Penelitian mereka menunjukkan bahwa Tesseract dapat mengubah gambar dokumen menjadi teks digital dengan tingkat akurasi yang tinggi, menjadikannya solusi ideal untuk mengatasi kelemahan sistem sebelumnya dalam memproses jawaban berupa hasil pemindaian atau foto.
+Dari perspektif pengembangan sistem web, penelitian terkini oleh (Elan Suherlan et al., 2025) menerapkan framework Flask untuk merancang sistem prediktif cerdas. Penelitian ini menunjukkan bahwa Flask, sebagai micro-framework, sangat efisien, ringan, dan adaptif dalam menghubungkan logika pemrosesan data yang rumit dengan antarmuka web, sesuai dengan kebutuhan dari sistem deteksi plagiarisme ini.
+Sebagai langkah terakhir untuk memastikan kualitas fungsi perangkat lunak, (Febriyanti et al., 2021) dari Universitas Udayana menerapkan metode Black Box Testing dalam sistem informasi manajemen. Penelitian mereka menyoroti bahwa teknik ini sangat penting untuk mengidentifikasi kesalahan di antarmuka dan fungsi sistem tanpa harus memahami struktur kode internalnya. Pendekatan ini digunakan oleh penulis untuk memverifikasi fitur pengunggahan dokumen dan visualisasi hasil deteksi dalam aplikasi yang dibuat.
+Dari kajian literatur di atas, dapat disimpulkan bahwa banyak penelitian sebelumnya memiliki batasan. Beberapa hanya fokus pada algoritma pengolahan teks, sedangkan yang lain hanya memfokuskan pada akurasi OCR. Hingga kini, belum ada penelitian yang menggabungkan deteksi Rabin-Karp dan Tesseract OCR dalam aplikasi ujian berbasis web untuk mengelola dokumen berbagai format. Penelitian ini bertujuan untuk mengatasi kekurangan tersebut.
+BAB III 
+METODOLOGI PENELITIAN
+A. Metode Penelitian
+Gambar  2 Metode Waterfall
+Untuk membangun sistem deteksi plagiarisme ini, penulis memilih metode pengembangan sistem model Waterfall. Alasan utama penulis menggunakan model ini adalah karena alur pengerjaannya yang sistematis dan berurutan dari hulu ke hilir. Karena penelitian ini bersifat "membangun aplikasi dari nol", metode Waterfall sangat cocok untuk memastikan setiap tahapan mulai dari analisis kebutuhan hingga sistem jadi terselesaikan dengan tuntas sebelum lanjut ke tahap berikutnya.
+
+Adapun tahapan yang akan dilakukan penulis adalah:
+Analisis Kebutuhan: Di sini penulis mencari tahu dulu apa saja yang dibutuhkan sistem. Misalnya, sistem harus bisa baca gambar (OCR) dan harus bisa hitung persen kemiripan teks.
+Desain Sistem: Setelah tahu butuhnya apa, penulis mulai merancang tampilan webnya (User Interface) dan merancang database-nya supaya alur datanya rapi.
+Implementasi: Ini tahap penulisan kode program. Desain yang sudah dibuat diterjemahkan ke dalam bahasa Python menggunakan framework Flask. Di tahap ini juga algoritma Rabin-Karp dan Tesseract OCR dipasang.
+Pengujian (Testing): Tahap ini dilakukan untuk memverifikasi kinerja sistem yang telah dibangun. Pengujian dibagi menjadi dua tahap, yaitu:
+Pengujian Fungsional (Black Box Testing): Menguji fungsi-fungsi pada antarmuka aplikasi (seperti fitur login, upload dokumen, dan tombol navigasi) untuk memastikan sistem berjalan sesuai rancangan tanpa error.
+Pengujian Akurasi (Accuracy Testing): Menguji kehandalan algoritma Rabin-Karp dan Tesseract OCR dengan cara membandingkan hasil perhitungan sistem dengan perhitungan manual. Tujuannya untuk memastikan persentase kemiripan yang dihasilkan sistem sudah valid dan sesuai dengan rumus teoritis.
+B. Waktu Dan Tempat Penelitian
+Waktu Penelitian 
+Tabel 2 Waktu Penelitian
+Tempat Penelitian 
+Penelitian ini mengambil studi kasus di Fakultas Ilmu Komputer Universitas Pancasakti Tegal lebih tepatnya saat ujian akhir semester (UAS). Namun, karena produknya berupa perangkat lunak, proses pengerjaan dan pengembangan aplikasinya dilakukan secara mandiri menggunakan perangkat laptop penulis.
+C. Variabel Penelitian
+Dalam penelitian ini, penulis menetapkan dua jenis variabel yang akan diamati:
+Variabel Bebas (Yang diubah-ubah) Variabel ini adalah input yang mempengaruhi  hasil proses sistem.
+Jenis Dokumen: Penulis akan mencoba mengunggah berbagai format dokumen, mulai dari teks dokumen (.docx, .pdf) hingga gambar hasil scan (.jpg, .png) untuk melihat ketangguhan sistem.
+Nilai K-Gram: Potongan karakter yang digunakan dalam algoritma Rabin-Karp (penulis menggunakan ) untuk melihat sensitivitas deteksi.
+Variabel Terikat (Hasil yang diukur) Variabel ini adalah output atau hasil yang keluar dari sistem.
+Nilai Kemiripan (Similarity): Berapa persen angka kemiripan yang dihasilkan sistem.
+Hasil Ekstraksi OCR: Apakah teks yang diambil dari gambar terbaca dengan benar atau berantakan.
+D. Instrumen Penelitian
+Instrumen penelitian adalah alat-alat yang digunakan penulis untuk membangun dan menguji sistem. Karena penelitian ini berbasis rekayasa perangkat lunak, instrumennya dibagi menjadi dua kategori utama, yaitu perangkat keras (hardware) dan perangkat lunak (software).
+Perangkat Keras (Hardware) Perangkat keras yang digunakan untuk pengembangan sistem ini adalah satu unit Laptop dengan spesifikasi sebagai berikut:
+Processor: Minimal Intel Core i5 atau AMD Ryzen 5 (Dibutuhkan prosesor yang cukup kuat untuk komputasi OCR).
+Memory (RAM): 8 GB DDR4 (Disarankan agar tidak lag saat menjalankan local server dan Tesseract secara bersamaan).
+Storage: SSD 512 GB.
+Monitor: Resolusi 1366x768 atau lebih tinggi.
+Perangkat Lunak (Software) Perangkat lunak yang digunakan meliputi sistem operasi dan tools pemrograman:
+Sistem Operasi: Windows 10/11 64-bit.
+Bahasa Pemrograman: Python (Versi 3.9 ke atas).
+Web Framework: Flask (Untuk membangun antarmuka web yang ringan).
+Library OCR: Tesseract-OCR (Google Tesseract Engine).
+Library NLP: Sastrawi (Untuk stemming Bahasa Indonesia).
+Database: SQLite.
+Code Editor: Visual Studio Code dan Google Antigravity.
+Browser: Google Chrome (Untuk pengujian sistem).
+E. Metode Pengumpulan Data
+Agar sistem yang dibangun memiliki dasar data yang valid, penulis menggunakan metode pengumpulan data sebagai berikut:
+Studi Kepustakaan (Literature Review) Penulis mengumpulkan informasi dengan cara membaca dan menganalisis jurnal-jurnal ilmiah terdahulu, buku, serta artikel terpercaya. Fokus studi literatur ini adalah memahami cara kerja algoritma Rabin-Karp , teknik Optical Character Recognition (OCR), dan aturan Preprocessing Teks Bahasa Indonesia menggunakan algoritma Nazief-Adriani. Referensi ini digunakan sebagai landasan teori dan panduan saat menulis kode program.
+Pengumpulan Data Sampel (Dataset Collection) Karena sistem ini bertujuan mendeteksi plagiarisme jawaban ujian, penulis menyiapkan data uji berupa dokumen jawaban simulasi. Data sampel ini terdiri dari:
+Data Teks: File berformat .docx dan .pdf yang berisi jawaban esai.
+Data Citra: File gambar (.jpg/.png) hasil screenshot atau foto jawaban tulisan komputer. Data ini nantinya akan digunakan untuk menguji apakah sistem berhasil membaca teks dari gambar dan menghitung persentase kemiripannya dengan akurat.
+F. Metode Analisa Data
+Metode analisis data dalam penelitian ini berfokus pada analisis alur pemrosesan data (algoritma) mulai dari input dokumen hingga keluar hasil persentase kemiripan. Tahapannya merujuk pada penelitian (Damayanti, 2022) dan (Aldian & Mubarak, 2022), yaitu:
+Gambar  3 Text Preprocessing
+Preprocessing Data (Text Preprocessing) Sebelum dokumen dibandingkan, data mentah harus "dibersihkan" terlebih dahulu agar perhitungan akurat. Langkah-langkahnya meliputi:
+Gambar 4 Esktraksi OCR
+Ekstraksi OCR: Mengubah gambar jawaban menjadi teks digital menggunakan Tesseract.
+Gambar 5 Case Folding
+Case Folding: Mengubah seluruh huruf menjadi huruf kecil (lowercase).
+Gambar 6 Tokenizing & Cleaning
+Tokenizing & Cleaning: Memecah kalimat menjadi kata per kata dan membuang tanda baca.
+Setelah huruf diseragamkan pada tahap Case Folding, data diproses menggunakan Tokenizing untuk memenggal kalimat menjadi kata-kata terpisah berdasarkan spasi. Secara simultan, fitur Cleaning membersihkan dokumen dari karakter non-alfabet seperti tanda baca, angka, dan simbol. Hal ini dilakukan untuk mencegah kegagalan deteksi pada algoritma Rabin-Karp yang bekerja berdasarkan pencocokan pola karakter. Dengan menghilangkan karakter-karakter noise tersebut, sistem menghasilkan data kata murni yang siap untuk disaring pada tahap Filtering.
+Gambar  7 Filtering Stopword Removal
+Filtering: Membuang kata hubung (stopword) yang tidak penting (seperti "dan", "yang", "di").
+Table 3 Stemming
+Stemming: Mengubah kata berimbuhan menjadi kata dasar menggunakan algoritma Nazief-Adriani, karena terbukti memiliki akurasi tinggi untuk Bahasa Indonesia.
+Sebagaimana terlihat pada tabel di atas, algoritma ini bekerja dengan aturan morfologi yang ketat untuk melepas awalan (prefix), akhiran (suffix), maupun sisipan (infix). Tahapan ini bertujuan untuk mereduksi kompleksitas kata tanpa mengubah makna intinya, sehingga proses pencocokan string (string matching) oleh algoritma Rabin-Karp pada tahap selanjutnya menjadi lebih efisien dan valid.
+Proses Hashing (Rabin-Karp) Setelah data bersih, dilakukan proses inti menggunakan algoritma Rabin-Karp:
+K-Gram: Memotong teks menjadi potongan karakter sepanjang k (misalnya k=5).
+Rolling Hash: Menghitung nilai hash (angka unik) untuk setiap potongan kata menggunakan rumus rolling hash agar komputasi lebih cepat.
+Perhitungan Kemiripan (Similarity Calculation) Sistem akan membandingkan nilai hash dari dokumen jawaban mahasiswa dengan kunci jawaban atau dokumen teman lainnya. Persentase kemiripan dihitung menggunakan koefisien kesamaan (Similarity Coefficient).
+Jika kemiripan < 30% : Plagiasi Ringan/Unik.
+Jika kemiripan 30% - 70% : Plagiasi Sedang.
+Jika kemiripan > 70% : Plagiasi Berat.
+G. Diagram Pengujian Sistem
+Gambar  8 Diagram Pengujian Sistem
+H. Diagram Alir Penelitian
+
+
+BAB IV HASIL PENELITIAN DAN PEMBAHASAN
+Hasil Penelitian
+Tahap realisasi sistem deteksi plagiarisme ini diawali dengan pengondisian lingkungan pengembangan yang terintegrasi guna menunjang performa algoritma secara optimal. Fokus utama pada fase ini adalah memastikan bahwa seluruh infrastruktur teknologi yang digunakan mampu menangani beban komputasi berat, terutama saat melakukan ekstraksi karakter dari citra digital dan perhitungan nilai hash pada dokumen panjang. Penyiapan lingkungan yang matang menjadi syarat fundamental agar transisi dari metode evaluasi konvensional menuju sistem digital di lingkungan Fakultas Teknik dan Ilmu Komputer Universitas Pancasakti Tegal dapat berjalan secara efisien dan stabil saat memproses dokumen multi-format secara simultan. 
+Dari sisi pendukung komputasi, penggunaan perangkat keras dengan spesifikasi yang mumpuni menjadi prioritas utama guna menjamin kecepatan pemrosesan data. Sistem ini dioperasikan menggunakan unit komputer yang ditenagai oleh prosesor setara Octa-core (Intel Core i5 atau AMD Ryzen 5) untuk memastikan proses ekstraksi piksel citra berlangsung tanpa kendala teknis . Dukungan memori RAM sebesar 8 GB berperan vital sebagai fondasi memori sistem guna mencegah terjadinya bottleneck atau kelebihan beban memori ketika mesin Tesseract melakukan pemindaian pada citra beresolusi tinggi. Selain itu, penggunaan media penyimpanan Solid State Drive (SSD) berkapasitas 512 GB memastikan akses baca-tulis data pada basis data lokal berlangsung secara responsif, sehingga waktu tunggu pengguna saat pengunggahan dokumen dapat diminimalisir. 
+Secara paralel, lingkungan perangkat lunak disusun menggunakan teknologi yang fleksibel dan andal untuk mendukung kebutuhan Natural Language Processing (NLP) . Sistem dikembangkan pada arsitektur sistem operasi Windows 64-bit menggunakan bahasa pemrograman Python versi 3.9 ke atas yang dipadukan dengan framework Flask untuk membangun antarmuka web yang ringan namun adaptif . Integrasi pustaka Tesseract-OCR dimanfaatkan sebagai komponen utama pengenalan karakter otomatis, sementara pustaka Sastrawi digunakan untuk mengakomodasi tahapan preprocessing teks Bahasa Indonesia melalui aturan morfologi yang ketat . Untuk manajemen data hasil pengujian, sistem menggunakan SQLite sebagai sistem manajemen basis data relasional yang efisien dalam mengelola penyimpanan dokumen sumber dan dokumen uji secara lokal.
+Implementasi Antarmuka Pengguna
+Realisasi antarmuka pengguna pada sistem ini dirancang dengan mengacu pada prinsip fungsionalitas dan efisiensi navigasi bagi tenaga pendidik maupun administrator sistem. Penggunaan kerangka kerja Flask yang diintegrasikan dengan desain web responsif memungkinkan platform ini diakses melalui berbagai perangkat komunikasi dengan penyesuaian tata letak yang konsisten.
+Halaman Autentikasi 
+Halaman ini merupakan lapisan keamanan pertama sekaligus gerbang utama bagi pengguna untuk mengakses fungsionalitas sistem. Mengingat dokumen jawaban mahasiswa merupakan data akademik yang bersifat rahasia, maka mekanisme autentikasi kredensial diwajibkan untuk memverifikasi hak akses. Antarmuka login dirancang secara minimalis namun elegan, dengan fokus utama pada formulir input username dan password guna menjamin keamanan integritas data dalam sistem.
+Halaman Dashboard 
+Setelah proses autentikasi berhasil dilakukan, pengguna akan diarahkan menuju halaman Dashboard. Halaman ini berfungsi sebagai pusat kendali utama yang menyajikan ringkasan informasi secara terpadu kepada pengguna. Di dalam Dashboard, terdapat menu navigasi yang terstruktur untuk mengarahkan pengguna ke fitur pengunggahan dokumen referensi maupun dokumen uji. Visualisasi data pada halaman ini dirancang agar administrator dapat melihat aktivitas pemeriksaan terakhir secara cepat dan efisien.
+Halaman Uji Deteksi Plagiarisme (Compare)
+Antarmuka ini merupakan halaman fungsionalitas inti di mana pengguna dapat mengintegrasikan dokumen acuan (Kunci Jawaban) dan dokumen yang diuji (Jawaban Mahasiswa) secara bersamaan dalam satu layar. Desain dirancang secara side-by-side (berdampingan) guna meminimalisir kebingungan pengguna saat memasukkan data. Sistem ini sangat fleksibel karena mendukung dua metode masukan: input teks manual secara langsung, maupun integrasi pengunggahan berkas digital dengan dukungan format multi-ekstensi, yaitu .docx, .pdf, .txt, .png, dan .jpg.
+Halaman Uji Deteksi Massal (Multi Compare)
+Halaman ini merupakan pengembangan fitur tingkat lanjut yang dirancang untuk memfasilitasi pengujian plagiarisme secara massal (batch processing). Antarmuka Multi Compare memungkinkan dosen atau administrator untuk membandingkan beberapa dokumen jawaban mahasiswa satu sama lain secara serentak. Guna menunjang efisiensi operasional, sistem menyediakan area unggah interaktif dengan metode drag-and-drop (seret dan lepas) yang mampu menampung 2 hingga 30 fail sekaligus. Fitur ini sangat adaptif karena tetap mendukung pemrosesan format multi-ekstensi, termasuk berkas teks (.txt, .docx, .pdf) maupun citra digital (.png, .jpg), sehingga proses evaluasi jawaban untuk satu kelas dapat dilakukan dalam satu kali komputasi.
+Halaman Profil dan Manajemen Akun (User Profile)
+Halaman ini disediakan sebagai antarmuka manajemen akun bagi pengguna sistem. Mengingat aplikasi ini mengelola data evaluasi akademik, aspek keamanan akun menjadi hal yang krusial. Pada antarmuka ini, pengguna dapat meninjau informasi kredensial mereka, seperti alamat surel (email), nama lengkap, peran akses (role), dan riwayat pendaftaran. Selain itu, guna menjamin keamanan privasi secara berkelanjutan, antarmuka ini dilengkapi dengan modul pembaruan kata sandi (Change Password) yang mewajibkan validasi kata sandi lama sebelum sistem mengizinkan pembaruan kata sandi yang baru.
+Halaman Hasil Kalkulasi dan Visualisasi Plagiarisme
+Berikut hasil merepresentasikan dari seluruh pemrosesan algoritma di latar belakang sistem (back-end). Pada antarmuka ini, sistem menyajikan rekapitulasi data berupa angka persentase kemiripan (Similarity Score) secara eksplisit setelah pengguna menekan tombol eksekusi pada halaman Compare maupun Multi Compare. Guna memperkuat bukti deteksi dan memudahkan proses koreksi oleh tenaga pendidik, antarmuka ini dirancang untuk menampilkan teks dokumen secara berdampingan yang telah dilengkapi dengan fitur penandaan visual (highlighting). Warna penanda ini secara otomatis menyorot fragmen kalimat atau kata yang teridentifikasi memiliki kesamaan pola hash antara dokumen acuan dan dokumen jawaban mahasiswa yang diuji.
+Lebih dari sekadar menyajikan angka numerik, integrasi visualisasi pada antarmuka hasil ini memegang peranan krusial dalam menjembatani kalkulasi matematis abstrak dari algoritma Rabin-Karp menjadi informasi yang mudah dipahami secara intuitif oleh pengguna. Dengan adanya penyandingan teks sumber dan teks uji secara real-time, dosen penilai dapat langsung melakukan validasi silang terhadap struktur kalimat yang terindikasi plagiat tanpa harus membuka lembar berkas secara terpisah. Fleksibilitas antarmuka ini dalam menampilkan teks hasil ekstraksi dari dokumen murni maupun citra digital hasil pemrosesan Tesseract OCR memastikan bahwa transparansi data hasil pengujian tetap terjaga, sehingga objektivitas dan efisiensi dalam proses evaluasi integritas akademik mahasiswa dapat ditingkatkan secara signifikan.
+Pengujian Fungsional (Black Box Testing)
+Setelah tahap implementasi antarmuka pengguna selesai, langkah evaluasi pertama yang dilakukan adalah pengujian fungsionalitas menggunakan metode Black Box Testing. Pengujian ini bertujuan untuk memvalidasi apakah setiap fitur dan tombol pada aplikasi telah merespons masukan (input) dari pengguna dan menghasilkan keluaran (output) yang sesuai dengan spesifikasi rancangan, tanpa perlu meninjau struktur kode internal sistem. Pengujian difokuskan pada alur kerja utama aplikasi, mulai dari proses autentikasi hingga pengelolaan dokumen. Rincian skenario dan hasil pengujian Black Box dapat dilihat pada Tabel 5 berikut:
+Table 4 Pengujian Sistem Black Box Testing
+Skenario Uji 1: Pengujian data teks digital (.PDF)
+Skenario pertama menggunakan dokumen uji berupa berkas digital murni (.pdf) yang berisi karakter teks cetak komputer standar (printed text) .
+Berdasarkan Gambar 15 di atas, dapat dilihat bahwa sistem berhasil mendeteksi tingkat kemiripan dokumen berformat .pdf sebesar 96.27%. Skor yang berada pada rentang merah (90-100%) ini menandakan bahwa sistem mendeteksi adanya indikasi kuat plagiarisme.
+ Melengkapi hasil kalkulasi persentase sebelumnya, Gambar 16 menampilkan rincian deteksi melalui fitur Perbandingan Teks Visual. Pada antarmuka ini, sistem menyandingkan hasil ekstraksi teks dari dokumen jawaban mahasiswa dengan dokumen acuan secara sejajar (side-by-side). Frasa atau blok kalimat yang diberi sorotan (highlight) berwarna hijau merepresentasikan susunan karakter (K-Gram) yang memiliki nilai hash identik berdasarkan perhitungan algoritma Rabin-Karp. Fitur penandaan visual ini dirancang untuk memberikan transparansi dan bukti empiris bagi tenaga pendidik. Dengan demikian, proses evaluasi tidak hanya bergantung pada hasil akhir berupa angka persentase semata, melainkan dosen dapat secara langsung meninjau, memverifikasi, dan memastikan letak spesifik dari kalimat-kalimat yang terindikasi sebagai hasil plagiasi.
+Selain menyajikan perbandingan dalam bentuk teks digital, sistem juga dibekali dengan fungsionalitas pelacakan plagiarisme secara visual yang diproyeksikan langsung pada tata letak dokumen asli, sebagaimana diilustrasikan pada Gambar 17. Pada tahap komputasi ini, sistem memetakan kembali hasil pencocokan hash dari algoritma Rabin-Karp ke dalam koordinat spasial (bounding boxes) pada dokumen. Area kalimat yang terindikasi sebagai hasil plagiasi secara otomatis ditandai menggunakan kotak pembatas berwarna merah secara presisi. Fitur pemetaan visual ini memberikan nilai tambah yang signifikan karena mempertahankan konteks format dan tata letak asli dari lembar jawaban mahasiswa. Lebih lanjut, integrasi tombol "Unduh Gambar" memungkinkan tenaga pendidik untuk mengunduh dan menyimpan citra dokumen bersorot tersebut sebagai rekam jejak atau barang bukti otentik yang valid dalam proses sidang evaluasi akademik.
+Skenario Uji 2: Pengujian data citra tulisan tangan (.JPG)
+Skenario kedua dilakukan untuk menguji performa sistem dalam mengenali teks yang terkunci di dalam format piksel berupa gambar foto lembar jawaban tulisan tangan mahasiswa.
+
+
+Berdasarkan Gambar 18, hasil analisis dokumen citra tulisan tangan menunjukkan penurunan persentase kemiripan menjadi 59.8%. Penurunan tajam ini disebabkan oleh keterbatasan akurasi Tesseract OCR dalam mengenali karakter tulisan tangan manusia (handwriting recognition). Ketidakkonsistenan bentuk huruf dan adanya gangguan visual (noise) pada foto memicu tingginya Character Error Rate saat proses ekstraksi gambar ke teks digital. Teks yang terdistorsi ini berdampak langsung pada kalkulasi algoritma Rabin-Karp, di mana sistem gagal mencocokkan nilai hash (K-Gram) secara presisi. Akibatnya, skor kemiripan akhir menyusut signifikan meskipun substansi asli dokumen tersebut terindikasi plagiasi.
+Meskipun terjadi penurunan persentase deteksi pada teks, Gambar 19 menunjukkan bahwa fungsionalitas pemetaan visual sistem tetap beroperasi secara optimal pada dokumen citra. Sistem berhasil memproyeksikan kembali teks yang teridentifikasi plagiat oleh algoritma Rabin-Karp ke dalam koordinat piksel asli (bounding boxes) pada foto lembar jawaban. Penandaan berupa kotak merah tersebut diletakkan secara akurat di atas area tulisan tangan yang terdeteksi memiliki kesamaan. Keberhasilan visualisasi langsung pada berkas citra ini sangat krusial, karena memudahkan tenaga pendidik dalam melakukan verifikasi silang secara manual untuk melacak posisi pasti dari indikasi kecurangan pada lembar kerja fisik mahasiswa.
+Rekapitulasi Perbandingan Hasil Uji
+Untuk memberikan gambaran komparatif yang menyeluruh dan objektif mengenai performa sistem pada kedua skenario pengujian di atas, dilakukan rekapitulasi data hasil uji silang. Tabel 4 merangkum perbandingan performa antara pengujian berkas teks digital murni (.pdf) dan berkas citra foto tulisan tangan (.jpg) menggunakan parameter algoritma yang sama, yaitu nilai 
+Tabel 4 Rekapitulasi Hasil Pengujian Akurasi
+Berdasarkan data rekapitulasi pada Tabel 4 terlihat jelas adanya kesenjangan (gap) skor kemiripan sebesar 36.47% antara berkas teks digital dan berkas citra tulisan tangan, meskipun secara fisik kedua dokumen tersebut menyalin substansi kalimat yang sama. Hasil ini memberikan kesimpulan fungsional bahwa efisiensi pencocokan pola oleh algoritma Rabin-Karp sangat bergantung pada tingkat presisi teks digital yang dihasilkan pada tahap hulu (input data).
+Pada skenario 1, karena teks bersifat digital murni, tidak ada kegagalan karakter (Character Error Rate) sehingga algoritma dapat memetakan potongan $k\text{-Gram}$ dengan ukuran 3 karakter dan menghitung nilai hash secara sempurna hingga mencapai angka 96.27%. Sebaliknya, pada skenario 2, keunikan guratan tulisan tangan manusia menyebabkan mesin Tesseract OCR mengalami salah interpretasi karakter saat ekstraksi. Akibatnya, teks bersih yang dieksekusi pada proses back-end mengalami perubahan kata yang memicu kegagalan pencocokan hash potongan 3 karakter tersebut, sehingga skor akhir menyusut ke angka 59.8%.
+Pengujian Fitur Pemrosesan Massal (Multi Compare)
+Selain pengujian komparasi tunggal, evaluasi fungsionalitas juga dilakukan terhadap fitur pemrosesan massal (Multi Compare). Pengujian ini bertujuan untuk memvalidasi ketahanan sistem dan kelancaran alur komputasi ketika dihadapkan pada beban kerja yang lebih besar, yaitu membandingkan beberapa dokumen jawaban mahasiswa secara serentak terhadap satu dokumen acuan.Pada skenario pengujian ini, sistem diinstruksikan untuk memproses beberapa fail dokumen sekaligus dalam satu kali komputasi antrean (batch processing). Sistem secara otomatis mengekstraksi teks, melakukan tahap preprocessing, dan menjalankan algoritma pencocokan Rabin-Karp dengan nilai parameter k-Gram = 3 untuk setiap dokumen secara sekuensial di latar belakang. Hasil dari pengujian massal ini disajikan pada Gambar 20.
+Berdasarkan Gambar 20, sistem terbukti berhasil mengeksekusi antrean pemrosesan (batch processing) tanpa mengalami kegagalan (system crash). Antarmuka menyajikan agregasi data berupa total perbandingan yang dilakukan (6 komparasi), rata-rata kemiripan keseluruhan (39.6%), serta mengisolasi nilai kemiripan tertinggi (63.92%) sebagai indikator prioritas utama.
+Lebih lanjut, Gambar 21 mendemonstrasikan kapabilitas sistem dalam melakukan komparasi silang (cross-comparison). Sistem tidak hanya membandingkan dokumen uji dengan satu kunci jawaban, melainkan melakukan permutasi perbandingan antara seluruh dokumen mahasiswa yang diunggah (misalnya, membandingkan dokumen Dea dengan Dimas, Nabila, dan Ziamul secara bergantian). Fitur pemetaan matriks ini memberikan kemudahan yang signifikan bagi dosen dalam melacak indikasi kerja sama atau penyalinan jawaban yang terjadi antar mahasiswa di dalam satu kelas.
+
+B.  Pembahasan
+Analisis Teknis Algoritma Rabin-Karp dengan Parameter       
+Implementasi algoritma Rabin-Karp dalam sistem ini berfokus pada efisiensi pencocokan pola string menggunakan metode rolling hash. Penggunaan nilai  dipilih berdasarkan karakteristik morfologi bahasa Indonesia yang memiliki banyak imbuhan dan kata dasar pendek. Dengan memecah teks menjadi fragmen 3 karakter, algoritma mampu menciptakan "sidik jari digital" (digital fingerprint) yang sangat rapat. Hal ini memberikan keuntungan pada deteksi plagiarisme tingkat kata, di mana pengubahan satu huruf dalam sebuah kata tetap akan terdeteksi sebagai ketidakcocokan hash pada jendela (window) tersebut, namun tetap menjaga kemiripan pada jendela sebelumnya dan sesudahnya. 
+Secara komputasi, nilai  memberikan beban yang lebih besar pada memori karena jumlah hash yang dihasilkan meningkat secara linier seiring panjangnya dokumen. Namun, hal ini dikompensasi dengan akurasi deteksi yang sangat sensitif. Sebagai contoh, pada pengujian Skenario 1 (PDF), nilai 96.27% menunjukkan bahwa algoritma hampir tidak melewatkan satu pun kesamaan pola teks. Analisis ini membuktikan bahwa meskipun terdapat upaya untuk mengaburkan plagiarisme dengan mengganti konjungsi atau imbuhan, struktur dasar kalimat tetap tertangkap oleh rapatnya  tersebut.
+Pipeline Preprocessing Citra Lanjutan untuk Optimasi Tesseract OCR
+Penelitian ini menemukan adanya batasan fundamental pada teknologi OCR tradisional (Optical Character Recognition) seperti Tesseract saat dihadapkan pada data non-digital berupa foto lembar jawaban. Tesseract bekerja dengan metode pencocokan pola karakter statis yang sangat rentan terhadap variasi bentuk tulisan tangan manusia (Handwritten Text Recognition), perbedaan pencahayaan, dan gangguan (noise) pada latar belakang foto. Untuk mengatasi keterbatasan tersebut tanpa harus bergantung pada API eksternal, sistem ini mengimplementasikan sebuah  pipeline preprocessing citra tingkat lanjut berbasis library OpenCV. Pendekatan rekayasa citra ini bertujuan untuk merekonstruksi foto mentah menjadi citra berkualitas dokumen (document-quality) sebelum diserahkan ke mesin Tesseract untuk proses ekstraksi karakter, sehingga tingkat kegagalan pembacaan dapat ditekan seminimal mungkin.
+            Tahapan optimasi citra dimulai dengan upscaling untuk memperbesar resolusi foto ke standar 300 DPI, diikuti dengan deskew menggunakan algoritma Hough Line Transform guna memperbaiki rotasi dokumen yang miring akibat sudut pengambilan kamera. Setelah rotasi diperbaiki, sistem menerapkan CLAHE (Contrast Limited Adaptive Histogram Equalization) untuk meratakan pencahayaan pada area yang terkena bayangan, serta Bilateral Filtering untuk menghapus bintik-bintik visual tanpa merusak ketajaman tepi huruf. Proses dilanjutkan dengan binarisasi adaptif untuk memisahkan teks dari latar belakang kertas secara tegas menjadi warna hitam putih, dan diakhiri dengan operasi morfologis untuk menghapus gangguan berupa garis horizontal pada kertas buku tulis. Rangkaian pipeline preprocessing ini terbukti mampu menstabilkan kualitas citra input dan memaksimalkan potensi Tesseract OCR dalam mengekstrak teks tulisan tangan secara mandiri tanpa memerlukan koneksi internet maupun Artificial Intelligence skala besar.
+Fenomena Akurasi pada Pengujian Citra: Analisis Faktor Noise dan Distorsi
+Selisih akurasi sebesar 36.47% antara dokumen digital dan citra (JPEG) menjadi poin pembahasan yang krusial. Dalam ilmu pengolahan citra digital, fenomena ini disebut sebagai hambatan Signal-to-Noise Ratio. Pada dokumen PDF, "sinyal" teks murni diterima 100% tanpa gangguan. Namun, pada dokumen JPEG tulisan tangan, terdapat berbagai elemen pengganggu (noise) seperti:
+Variasi Kinestetik: Perbedaan tekanan pena dan kelenturan tangan setiap mahasiswa menciptakan bentuk huruf yang unik dan sulit distandarisasi.
+Kondisi Akuisisi Citra: Kualitas kamera ponsel, sudut pengambilan gambar (perspective distortion), dan bayangan pada kertas menciptakan artefak visual yang mengaburkan batas karakter.
+Inkonsistensi Spasi: Tulisan tangan seringkali tidak memiliki jarak spasi yang konsisten antar kata, yang dapat membingungkan sistem dalam menentukan batas-batas n-gram.
+Ketidaksempurnaan hasil ekstraksi ini secara otomatis merusak urutan karakter yang akan di-hash oleh algoritma Rabin-Karp. Karena sifat algoritma hash yang sangat sensitif, perubahan satu karakter saja pada teks hasil OCR akan menghasilkan nilai hash yang sepenuhnya berbeda. Inilah alasan utama mengapa skor kemiripan pada citra tidak bisa setinggi dokumen digital murni.
+Skalabilitas dan Optimasi Performa melalui Fitur Multi Compare
+Fitur Multi Compare yang diimplementasikan dalam platform ini bukan sekadar tambahan antarmuka pengguna (User Interface), melainkan sebuah solusi komputasional atas masalah waktu pemrosesan yang berlipat ganda dalam pengecekan dokumen massal. Dalam skenario evaluasi kelas nyata dengan jumlah mahasiswa yang banyak, untuk melakukan komparasi silang (cross-referencing) secara menyeluruh, sistem harus mengeksekusi perbandingan untuk setiap kemungkinan pasangan lembar jawaban yang ada. Jika dilakukan secara manual, proses ini akan memakan waktu berjam-jam dan sangat rentan terhadap penurunan tingkat ketelitian manusia (human fatigue).
+Sistem ini memecahkan kebuntuan tersebut melalui otomatisasi alur kerja (workflow automation) dan manajemen memori yang efisien di sisi server. Pembahasan mengenai efisiensi ini berkaitan erat dengan implementasi queue management (manajemen antrean) dan teknik caching. Pada saat batch processing dijalankan, sistem secara cerdas hanya melakukan satu kali ekstraksi teks (melalui integrasi Vision AI) dan satu kali pembuatan hash (melalui algoritma Rabin-Karp) untuk setiap dokumen. Hasil pra-pemrosesan (pre-processing) tersebut kemudian diserialisasi dan disimpan sementara di dalam cache memori.
+Ketika tahap komparasi silang dimulai, sistem tidak lagi membaca dan memproses ulang dokumen dari awal. Algoritma hanya perlu mencocokkan deretan nilai hash yang sudah terindeks di dalam memori. Arsitektur yang mengutamakan efisiensi ruang dan waktu ini meminimalkan penggunaan daya komputasi yang berulang secara drastis. Sebagai hasilnya, meskipun jumlah dokumen masukan (input) terus bertambah seiring besarnya kapasitas kelas, lonjakan beban komputasi dan delay sistem dapat ditekan secara logis, menjadikan platform ini sangat tangguh untuk diterapkan pada lingkungan institusi pendidikan.
+Implikasi Integritas Akademik dan Etika Penggunaan Sistem
+Secara holistik, kehadiran sistem deteksi plagiarisme hibrida ini tidak hanya berdampak pada efisiensi evaluasi teknis, tetapi juga memicu implikasi psikologis berupa deterrent effect (efek jera) yang positif bagi mahasiswa. Pemahaman bahwa lembar jawaban fisik (tulisan tangan) kini tidak lagi kebal dari pemeriksaan digital dan dapat dilacak jejak kesamaannya hingga ke tingkat potongan kata yang sangat detail, secara langsung akan mendorong mahasiswa untuk lebih mengutamakan orisinalitas dalam berpikir. Paradigma ini menggeser fungsi teknologi dari sekadar instrumen pendeteksi hukuman, menjadi instrumen preventif yang membangun budaya akademik yang jujur dan transparan.
+Meskipun kapabilitas teknis sistem terbukti tinggi, sangat penting untuk menegaskan batasan etis dalam implementasi nyatanya. Sistem ini murni dirancang sebagai Decision Support System (DSS) atau Sistem Pendukung Keputusan, bukan sebagai pengambil keputusan mutlak yang mengeliminasi peran manusia (automated decision maker). Seperti yang terefleksi pada data Skenario 2, skor akurasi 59.8% pada dokumen tulisan tangan masih menyimpan celah anomali akibat noise visual. Angka kemiripan yang tergolong pada kategori "Risiko Rendah" tersebut tidak boleh serta-merta diartikan sebagai jaminan bahwa dokumen tersebut sepenuhnya bebas dari plagiarisme. Kesalahan interpretasi karakter (misrecognition) oleh mesin AI dapat menyamarkan letak kecurangan yang sebenarnya.
+Oleh karena itu, prinsip Human-in-the-Loop (HITL) harus tetap dipertahankan secara mutlak. Peran dosen atau tenaga pendidik tetap menjadi pemegang otoritas final (hak prerogatif) dalam menentukan apakah sebuah dokumen sah dikategorikan sebagai tindakan plagiarisme atau sekadar kemiripan frasa umum. Dalam ekosistem ini, aplikasi berfungsi secara proporsional sebagai penyaring awal (filtering tool) yang menyoroti area-area mencurigakan melalui proyeksi penanda warna merah, sehingga dosen dapat mendedikasikan waktu dan tenaga kognitif mereka secara terfokus pada tahap investigasi lanjutan.
+DAFTAR PUSTAKA
+Aldian, A., & Mubarak, M. (2022). Implementasi Algoritma Rabin-Karp Untuk Pendeteksian Plagiarisme Pada File Dokumen Berupa Text Berbasis Web. Journal of Information System Research (JOSH), 3(3), 150–154. https://doi.org/10.47065/josh.v3i3.1404
+Arnawa. (2021). Komparasi Algoritma Winnowing Dan Rabin. Jurnal Teknologi Informasi Dan Komputer, 7(4), 345–351.
+Damayanti, A. (2022). Pendeteksi Untuk Tingkat Kemiripan Kata Pada Karya Tulis Ilmiah dengan Menggunakan Metode Nazief Adriani. Bulletin of Information System Research, 1(1), 30–38. https://doi.org/10.62866/bios.v1i1.26
+Dewi, K., & Werastuti, D. (2022). Pengaruh Online Learning, Pressure, Opportunity, dan Rationalization Terhadap Perilaku Academic Fraud di Masa Pandemi Covid-19 (Studi pada Mahasiswa Universitas Pendidikan Ganesha). Jurnal Ilmiah Akuntansi Dan Humanika, 12(1), 1–12.
+Elan Suherlan, Shindy Arti, Siti Nabilah, & Zahwah Hazimah. (2025). Penerapan Flask Framework Untuk Deployment Model Machine Learning Dalam Mendukung Analisis Adaptasi Mahasiswa Pada Pembelajaran Daring. PINTER : Jurnal Pendidikan Teknik Informatika Dan Komputer, 9(1), 110–117. https://doi.org/10.21009/pinter.9.1.15
+Febriyanti, N. M. D., Oka Sudana, A. . K., & Piarsa, I. N. (2021). Implementasi Black Box Testing pada Sistem Informasi Manajemen Dosen. JITTER : Jurnal Ilmiah Teknologi Dan Komputer, 2(3), 535. https://doi.org/10.24843/jtrti.2021.v02.i03.p12
+Gunawan. (2021). Deteksi Plagiarisme Abstrak Skripsi dengan Menggunakan Algoritma Rabin Karp (Studi Kasus: Fakultas Ilmu Komputer Universitas Singaperbangsa Karawang). Techno Xplore : Jurnal Ilmu Komputer Dan Teknologi Informasi, 6(2), 75–81. https://doi.org/10.36805/technoxplore.v6i2.1227
+Herman, H. (2024). Implementasi Algoritma Rabin Karp Dan Optimasi Dengan Algoritma Stemmer Sastrawi Dalam Deteksi Plagiat Pada Jurnal Skripsi Mahasiswa. Majalah Ilmiah METHODA, 14(1), 1–7. https://doi.org/10.46880/methoda.vol14no1.pp1-7
+Maesaroh, S., & Iqbal, A. (2023). Sistem Digitalisasi Data Pasien Klinik Bhakti Medika Dengan Image Processing Ocr (Optical Character Recognition) Menggunakan Tesseract. 9(2), 316–329.
+Sihombing, D. O. (2022). Implementasi Natural Language Processing (NLP) dan Algoritma Cosine Similarity dalam Penilaian Ujian Esai Otomatis. Jurnal Sistem Komputer Dan Informatika (JSON), 4(2), 396. https://doi.org/10.30865/json.v4i2.5374
