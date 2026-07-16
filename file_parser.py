@@ -347,12 +347,12 @@ def _clean_ocr_text(raw_text):
         if not stripped:
             continue
         
-        # Count alphabetic characters
-        alpha_count = sum(1 for c in stripped if c.isalpha())
+        # Count alphanumeric characters (to include math/numbers)
+        alnum_count = sum(1 for c in stripped if c.isalnum())
         total_count = len(stripped)
         
-        # Keep lines that are at least 15% alphabetic and have 2+ alpha chars
-        if total_count > 0 and alpha_count >= 2 and (alpha_count / total_count) >= 0.15:
+        # Keep lines that are at least 5% alphanumeric and have 1+ alnum char
+        if total_count > 0 and alnum_count >= 1 and (alnum_count / total_count) >= 0.05:
             cleaned_lines.append(stripped)
     
     text = ' '.join(cleaned_lines)

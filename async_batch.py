@@ -25,6 +25,7 @@ def process_batch_async(batch_id, file_paths, original_filenames, current_user_i
             from batch_comparison import compare_all_pairs
             
             documents = []
+            errors = []
             total_files = len(file_paths)
             
             for idx, (path, original_name) in enumerate(zip(file_paths, original_filenames)):
@@ -36,7 +37,7 @@ def process_batch_async(batch_id, file_paths, original_filenames, current_user_i
                     
                     if data.get('error'):
                         logger.error(f"Error on {original_name}: {data['error']}")
-                        # Still record it so we don't lose the whole batch
+                        errors.append({'filename': original_name, 'error': data['error']})
                     elif data and data.get('text'):
                         image_paths = []
                         if data.get('images'):
@@ -59,6 +60,7 @@ def process_batch_async(batch_id, file_paths, original_filenames, current_user_i
                 
             update_status('processing', 60, "Membandingkan kemiripan dokumen...")
             results = compare_all_pairs(documents)
+            results['errors'] = errors
             
             update_status('processing', 80, "Menyimpan hasil perbandingan...")
             batch_results_dir = os.path.join('static', 'uploads', 'batch_results')

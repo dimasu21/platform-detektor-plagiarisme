@@ -51,6 +51,19 @@
                     <span class="stat-value">{{ stats.max_similarity }}%</span>
                 </div>
             </div>
+            
+            {% if results and results.errors %}
+            <div class="ocr-errors" style="margin-top: 20px;">
+                <h4 style="color: #dc3545; margin-bottom: 10px;">⚠️ Gagal Diproses ({{ results.errors|length }} file)</h4>
+                <ul style="list-style-type: none; padding: 0;">
+                    {% for err in results.errors %}
+                    <li style="background: #f8d7da; color: #721c24; padding: 10px; margin-bottom: 5px; border-radius: 5px; font-size: 0.9rem;">
+                        <strong>{{ err.filename }}:</strong> {{ err.error }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
 
             <div class="score-interpretation">
                 <h4>Panduan Interpretasi Skor</h4>
