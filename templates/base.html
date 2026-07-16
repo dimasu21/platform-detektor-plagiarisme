@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plagiarism Detector</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=5) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=6) }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
@@ -19,12 +19,14 @@
                 <h1>Plagiarism<span class="highlight">Detector</span></h1>
             </div>
             {% if current_user.is_authenticated %}
-            <button class="burger-menu" id="burgerMenu" aria-label="Toggle menu">
+            <button class="burger-menu" id="burgerMenu" onclick="toggleMenu()" aria-label="Toggle menu">
                 <span></span>
                 <span></span>
                 <span></span>
             </button>
+            <div class="nav-overlay" id="navOverlay" onclick="closeMenu()"></div>
             <nav class="header-nav" id="headerNav">
+                <button class="nav-close" onclick="closeMenu()" aria-label="Tutup menu">&times;</button>
                 <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">Dashboard</a>
                 <a href="{{ url_for('compare') }}" class="nav-link {% if request.endpoint == 'compare' %}active{% endif %}">Compare</a>
                 <a href="{{ url_for('batch_comparison') }}" class="nav-link {% if request.endpoint in ['batch_comparison', 'batch_detail'] %}active{% endif %}">Multi Compare</a>
@@ -67,63 +69,66 @@
     </div>
 
     <script>
-        // Hamburger menu toggle
-        var burgerMenu = document.getElementById('burgerMenu');
-        var headerNav = document.getElementById('headerNav');
-
-        if (burgerMenu && headerNav) {
-            burgerMenu.addEventListener('click', function () {
-                burgerMenu.classList.toggle('active');
-                headerNav.classList.toggle('active');
-                document.body.classList.toggle('menu-open');
-            });
-
-            // Close menu when clicking overlay (outside the menu)
-            document.addEventListener('click', function(e) {
-                if (document.body.classList.contains('menu-open')) {
-                    if (!headerNav.contains(e.target) && !burgerMenu.contains(e.target)) {
-                        burgerMenu.classList.remove('active');
-                        headerNav.classList.remove('active');
-                        document.body.classList.remove('menu-open');
-                    }
-                }
-            });
+        // Ultra-compatible menu toggle functions (no addEventListener needed)
+        function toggleMenu() {
+            var burger = document.getElementById('burgerMenu');
+            var nav = document.getElementById('headerNav');
+            var overlay = document.getElementById('navOverlay');
+            if (!burger || !nav) return;
+            
+            var isOpen = nav.className.indexOf('active') !== -1;
+            
+            if (isOpen) {
+                closeMenu();
+            } else {
+                burger.className = 'burger-menu active';
+                nav.className = nav.className + ' active';
+                if (overlay) overlay.className = 'nav-overlay active';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        function closeMenu() {
+            var burger = document.getElementById('burgerMenu');
+            var nav = document.getElementById('headerNav');
+            var overlay = document.getElementById('navOverlay');
+            if (burger) burger.className = 'burger-menu';
+            if (nav) nav.className = nav.className.replace(' active', '');
+            if (overlay) overlay.className = 'nav-overlay';
+            document.body.style.overflow = '';
         }
 
         // Image Zoom Modal
-        const modal = document.getElementById("imageModal");
-        const modalImg = document.getElementById("zoomedImage");
-        const closeModal = document.querySelector(".close-modal");
-        const zoomableImages = document.querySelectorAll(".zoomable-image");
+        var modal = document.getElementById("imageModal");
+        var modalImg = document.getElementById("zoomedImage");
+        var closeModalBtn = document.querySelector(".close-modal");
+        var zoomableImages = document.querySelectorAll(".zoomable-image");
 
         if (zoomableImages.length > 0 && modal && modalImg) {
-            zoomableImages.forEach(img => {
-                img.addEventListener('click', function() {
+            for (var i = 0; i < zoomableImages.length; i++) {
+                zoomableImages[i].onclick = function() {
                     modal.style.display = "flex";
                     modalImg.src = this.src;
-                });
-            });
-
-            // Close modal when clicking on the close button
-            if (closeModal) {
-                closeModal.addEventListener('click', function() {
-                    modal.style.display = "none";
-                });
+                };
             }
 
-            // Close modal when clicking outside the image
-            modal.addEventListener('click', function(e) {
+            if (closeModalBtn) {
+                closeModalBtn.onclick = function() {
+                    modal.style.display = "none";
+                };
+            }
+
+            modal.onclick = function(e) {
                 if (e.target === modal) {
                     modal.style.display = "none";
                 }
-            });
+            };
 
-            // Close modal on escape key
-            document.addEventListener('keydown', function(e) {
+            document.onkeydown = function(e) {
                 if (e.key === "Escape" && modal.style.display === "flex") {
                     modal.style.display = "none";
                 }
-            });
+            };
         }
     </script>
 </body>
