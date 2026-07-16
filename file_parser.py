@@ -131,7 +131,7 @@ def _deskew_image(gray):
     if lines is not None and len(lines) > 0:
         angles = []
         for line in lines:
-            x1, y1, x2, y2 = line[0]
+            x1, y1, x2, y2 = line.flatten()
             angle = np.degrees(np.arctan2(y2 - y1, x2 - x1))
             # Only consider near-horizontal lines (text lines)
             if abs(angle) < 15:
