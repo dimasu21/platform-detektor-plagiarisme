@@ -621,7 +621,9 @@ def batch_comparison():
         for idx, f in enumerate(files):
             if f.filename:
                 data = extract_text_and_images_from_file(f)
-                if data and data['text']:
+                if data.get('error'):
+                    flash(f"Error on {f.filename}: {data['error']}", 'error')
+                elif data and data['text']:
                     # Save images to files if present
                     image_paths = []
                     if data.get('images'):

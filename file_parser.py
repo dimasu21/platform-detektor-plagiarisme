@@ -484,7 +484,8 @@ def extract_text_and_images_from_file(file_storage):
     result = {
         'text': '',
         'images': [],
-        'filename': filename
+        'filename': filename,
+        'error': None
     }
     
     try:
@@ -518,6 +519,11 @@ def extract_text_and_images_from_file(file_storage):
             logger.debug("\n[STEP 3] Post-OCR Text Cleanup...")
             clean_text = _clean_ocr_text(raw_text)
             
+            if not clean_text and raw_text:
+                result['error'] = f"Filter dropped all text. Raw: {raw_text[:50]}..."
+            elif not clean_text and not raw_text:
+                result['error'] = "Tesseract OCR found 0 words."
+                
             logger.debug(f"\n[RESULT] Final clean text ({len(clean_text)} chars):")
             logger.debug(f"  Preview: {clean_text[:200]}...")
             logger.debug(f"{'='*60}\n")
@@ -540,6 +546,7 @@ def extract_text_and_images_from_file(file_storage):
         logger.error(f"Error extracting from {filename}: {e}", exc_info=True)
         import traceback
         traceback.print_exc()
+        result['error'] = f"{type(e).__name__}: {str(e)}"
     
     return result
 
