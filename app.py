@@ -5,7 +5,7 @@ import time
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
 
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
@@ -626,6 +626,7 @@ def batch_comparison():
         for idx, f in enumerate(files):
             if f.filename:
                 # generate safe temp filename
+                from werkzeug.utils import secure_filename
                 safe_name = f"{idx}_{secure_filename(f.filename)}"
                 temp_path = os.path.join(temp_dir, safe_name)
                 f.save(temp_path)
