@@ -31,6 +31,7 @@
                 <a href="{{ url_for('profile') }}" class="nav-link {% if request.endpoint == 'profile' %}active{% endif %}">Profile</a>
                 {% if current_user.is_admin() %}
                 <a href="{{ url_for('admin_users') }}" class="nav-link {% if request.endpoint == 'admin_users' %}active{% endif %}">Admin</a>
+                <a href="{{ url_for('admin_history') }}" class="nav-link {% if request.endpoint == 'admin_history' %}active{% endif %}">Riwayat</a>
                 {% endif %}
                 <div class="user-area">
                     <span class="user-greeting">{{ current_user.name }}</span>

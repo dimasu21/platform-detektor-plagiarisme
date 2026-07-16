@@ -1,3 +1,4 @@
+import logging
 import docx
 from pypdf import PdfReader
 from PIL import Image
@@ -8,13 +9,21 @@ import re
 import numpy as np
 import cv2
 
-# Configure Tesseract path for Windows
-pytesseract.pytesseract.tesseract_cmd = r'D:\projectpribadi\_installed_tesseract\tesseract.exe'
+logger = logging.getLogger(__name__)
 
-print("INFO: Tesseract OCR engine initialized as primary text extraction method.")
+# Configure Tesseract path from environment variable
+# Windows: set TESSERACT_CMD=D:\path\to\tesseract.exe
+# Linux:   typically /usr/bin/tesseract (default)
+tesseract_cmd = os.environ.get('TESSERACT_CMD', '')
+if tesseract_cmd:
+    pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
 
-# Configure Poppler path for Windows (for pdf2image)
-POPPLER_PATH = r'D:\projectpribadi\poppler-25.11.0\Library\bin'
+logger.info("Tesseract OCR engine initialized as primary text extraction method.")
+
+# Configure Poppler path from environment variable
+# Windows: set POPPLER_PATH=D:\path\to\poppler\Library\bin
+# Linux:   leave empty (uses system PATH)
+POPPLER_PATH = os.environ.get('POPPLER_PATH', '') or None
 
 # Allowed file extensions
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'docx', 'png', 'jpg', 'jpeg'}
@@ -57,7 +66,7 @@ def _upscale_image(gray, target_width=2400):
         new_w = int(w * scale)
         new_h = int(h * scale)
         gray = cv2.resize(gray, (new_w, new_h), interpolation=cv2.INTER_CUBIC)
-        print(f"  DEBUG [Upscale]: {w}x{h} -> {new_w}x{new_h} (scale {scale:.1f}x)")
+        logger.debug(f"  DEBUG [Upscale]: {w}x{h} -> {new_w}x{new_h} (scale {scale:.1f}x)")
     return gray
 
 
@@ -67,7 +76,7 @@ def _denoise_image(gray):
     fastNlMeansDenoising works well for document photos.
     """
     denoised = cv2.fastNlMeansDenoising(gray, h=12, templateWindowSize=7, searchWindowSize=21)
-    print("  DEBUG [Denoise]: Applied Non-Local Means denoising")
+    logger.debug("  DEBUG [Denoise]: Applied Non-Local Means denoising")
     return denoised
 
 
@@ -97,13 +106,13 @@ def _remove_notebook_lines(binary):
     if 0.001 < line_ratio < 0.15:
         # Remove lines by setting them to white (background)
         result = cv2.bitwise_or(binary, cv2.bitwise_not(line_mask))
-        print(f"  DEBUG [LineRemoval]: Removed notebook lines (ratio: {line_ratio:.4f})")
+        logger.debug(f"  DEBUG [LineRemoval]: Removed notebook lines (ratio: {line_ratio:.4f})")
         return result
     elif line_ratio >= 0.15:
-        print(f"  DEBUG [LineRemoval]: Ratio too high ({line_ratio:.4f}), skipping to preserve text")
+        logger.debug(f"  DEBUG [LineRemoval]: Ratio too high ({line_ratio:.4f}), skipping to preserve text")
         return binary
     else:
-        print("  DEBUG [LineRemoval]: No significant lines detected, skipping")
+        logger.debug("  DEBUG [LineRemoval]: No significant lines detected, skipping")
         return binary
 
 
@@ -142,14 +151,14 @@ def _deskew_image(gray):
                                         flags=cv2.INTER_CUBIC,
                                         borderMode=cv2.BORDER_CONSTANT,
                                         borderValue=255)
-                print(f"  DEBUG [Deskew]: Corrected rotation by {median_angle:.2f} degrees")
+                logger.debug(f"  DEBUG [Deskew]: Corrected rotation by {median_angle:.2f} degrees")
                 return rotated
             else:
-                print(f"  DEBUG [Deskew]: Angle {median_angle:.2f} degrees too small/large, skipping")
+                logger.debug(f"  DEBUG [Deskew]: Angle {median_angle:.2f} degrees too small/large, skipping")
         else:
-            print("  DEBUG [Deskew]: No valid text lines detected")
+            logger.debug("  DEBUG [Deskew]: No valid text lines detected")
     else:
-        print("  DEBUG [Deskew]: No lines detected for deskew")
+        logger.debug("  DEBUG [Deskew]: No lines detected for deskew")
     
     return gray
 
@@ -170,7 +179,7 @@ def _adaptive_threshold(gray):
         blockSize=31,
         C=15
     )
-    print("  DEBUG [Threshold]: Applied adaptive Gaussian thresholding")
+    logger.debug("  DEBUG [Threshold]: Applied adaptive Gaussian thresholding")
     return binary
 
 
@@ -192,7 +201,7 @@ def _morphological_cleanup(binary):
     opened = cv2.morphologyEx(inverted, cv2.MORPH_OPEN, open_kernel, iterations=1)
     result = cv2.bitwise_not(opened)
     
-    print("  DEBUG [Morphology]: Applied close + noise removal")
+    logger.debug("  DEBUG [Morphology]: Applied close + noise removal")
     return result
 
 
@@ -204,7 +213,7 @@ def _apply_clahe(gray):
     """
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     enhanced = clahe.apply(gray)
-    print("  DEBUG [CLAHE]: Applied adaptive histogram equalization")
+    logger.debug("  DEBUG [CLAHE]: Applied adaptive histogram equalization")
     return enhanced
 
 
@@ -215,7 +224,7 @@ def _bilateral_denoise(gray):
     it doesn't blur the text edges.
     """
     denoised = cv2.bilateralFilter(gray, d=9, sigmaColor=75, sigmaSpace=75)
-    print("  DEBUG [BilateralFilter]: Applied edge-preserving denoise")
+    logger.debug("  DEBUG [BilateralFilter]: Applied edge-preserving denoise")
     return denoised
 
 
@@ -233,7 +242,7 @@ def _advanced_preprocess_for_handwriting(pil_image):
     6. Line Rem. - Remove notebook ruled lines
     7. Morphology- Connect broken strokes, remove speckle noise
     """
-    print("DEBUG [Pipeline]: Starting advanced Tesseract preprocessing...")
+    logger.debug("DEBUG [Pipeline]: Starting advanced Tesseract preprocessing...")
     
     # Step 0: Convert PIL -> OpenCV grayscale
     cv2_img = _pil_to_cv2(pil_image)
@@ -263,7 +272,7 @@ def _advanced_preprocess_for_handwriting(pil_image):
     # Step 7: Morphological cleanup
     binary = _morphological_cleanup(binary)
     
-    print("DEBUG [Pipeline]: Preprocessing complete - image is now document-quality")
+    logger.debug("DEBUG [Pipeline]: Preprocessing complete - image is now document-quality")
     
     # Convert back to PIL
     return _cv2_to_pil(binary)
@@ -370,7 +379,7 @@ def _clean_ocr_text(raw_text):
             filtered_words.append(word)
     text = ' '.join(filtered_words)
     
-    print(f"  DEBUG [TextCleanup]: Cleaned text length: {len(text)} chars")
+    logger.debug(f"  DEBUG [TextCleanup]: Cleaned text length: {len(text)} chars")
     return text
 
 
@@ -405,16 +414,16 @@ def _multi_pass_ocr(processed_image, lang='ind+eng'):
             # Score formula: alphabetic chars + bonus for word count
             score = alpha_count + (word_count * 2)
             
-            print(f"  DEBUG [MultiOCR] {name}: {len(text)} chars, {word_count} words, score={score}")
+            logger.debug(f"  DEBUG [MultiOCR] {name}: {len(text)} chars, {word_count} words, score={score}")
             
             if score > best_score:
                 best_score = score
                 best_text = text
                 best_config_name = name
         except Exception as e:
-            print(f"  DEBUG [MultiOCR] {name} failed: {e}")
+            logger.debug(f"  DEBUG [MultiOCR] {name} failed: {e}")
     
-    print(f"  DEBUG [MultiOCR]: Best config = {best_config_name} (score={best_score})")
+    logger.debug(f"  DEBUG [MultiOCR]: Best config = {best_config_name} (score={best_score})")
     return best_text
 
 
@@ -447,7 +456,7 @@ def extract_text_from_file(file_storage):
         else:
             return ""
     except Exception as e:
-        print(f"Error extracting text from {filename}: {e}")
+        logger.debug(f"Error extracting text from {filename}: {e}")
         return ""
 
 
@@ -489,29 +498,29 @@ def extract_text_and_images_from_file(file_storage):
             # TESSERACT OCR PIPELINE
             # Photo -> Preprocessing -> Multi-Pass OCR -> Clean Text
             # ============================================
-            print(f"\n{'='*60}")
-            print(f"TESSERACT OCR PIPELINE: Processing {filename}")
-            print(f"{'='*60}")
+            logger.debug(f"\n{'='*60}")
+            logger.debug(f"TESSERACT OCR PIPELINE: Processing {filename}")
+            logger.debug(f"{'='*60}")
             
             # Load original image
             image = Image.open(file_storage)
             original_image = image.copy()  # Keep original for highlighting
             
             # Step 1: Advanced preprocessing (convert photo to clean document)
-            print("\n[STEP 1] Advanced Preprocessing (Photo -> Document Quality)...")
+            logger.debug("\n[STEP 1] Advanced Preprocessing (Photo -> Document Quality)...")
             clean_document = _advanced_preprocess_for_handwriting(image)
             
             # Step 2: Multi-pass OCR on the clean document
-            print("\n[STEP 2] Multi-Pass OCR on clean document...")
+            logger.debug("\n[STEP 2] Multi-Pass OCR on clean document...")
             raw_text = _multi_pass_ocr(clean_document, lang='ind+eng')
             
             # Step 3: Post-OCR text cleanup
-            print("\n[STEP 3] Post-OCR Text Cleanup...")
+            logger.debug("\n[STEP 3] Post-OCR Text Cleanup...")
             clean_text = _clean_ocr_text(raw_text)
             
-            print(f"\n[RESULT] Final clean text ({len(clean_text)} chars):")
-            print(f"  Preview: {clean_text[:200]}...")
-            print(f"{'='*60}\n")
+            logger.debug(f"\n[RESULT] Final clean text ({len(clean_text)} chars):")
+            logger.debug(f"  Preview: {clean_text[:200]}...")
+            logger.debug(f"{'='*60}\n")
             
             result['text'] = clean_text
             result['images'] = [original_image]  # Keep original image for highlighting
@@ -528,7 +537,7 @@ def extract_text_and_images_from_file(file_storage):
             result['images'] = []
             
     except Exception as e:
-        print(f"Error extracting from {filename}: {e}")
+        logger.debug(f"Error extracting from {filename}: {e}")
         import traceback
         traceback.print_exc()
     
@@ -567,9 +576,9 @@ def _extract_from_pdf(file_storage):
         if len(extracted_text) > 50: 
             return extracted_text
             
-        print("DEBUG: Standard PDF extraction yielded little/no text. Trying OCR...")
+        logger.debug("DEBUG: Standard PDF extraction yielded little/no text. Trying OCR...")
     except Exception as e:
-        print(f"DEBUG: Standard PDF extraction failed: {e}")
+        logger.debug(f"DEBUG: Standard PDF extraction failed: {e}")
 
     # 2. Fallback to OCR (pdf2image -> pytesseract)
     try:
@@ -582,7 +591,7 @@ def _extract_from_pdf(file_storage):
         
         ocr_text = []
         for i, image in enumerate(images):
-            print(f"DEBUG: OCR Processing page {i+1}...")
+            logger.debug(f"DEBUG: OCR Processing page {i+1}...")
             # Preprocess image for better OCR
             processed_image = _preprocess_image_for_ocr(image)
             # Use PSM 4 (Assume a single column of text of variable sizes) which works better for mixed handwritten layouts
@@ -592,7 +601,7 @@ def _extract_from_pdf(file_storage):
             
         return '\n'.join(ocr_text)
     except Exception as e:
-        print(f"DEBUG: PDF OCR failed: {e}")
+        logger.debug(f"DEBUG: PDF OCR failed: {e}")
         return ""
 
 
@@ -608,11 +617,11 @@ def _extract_from_pdf_with_images(file_storage):
         
         # Convert PDF to images (higher DPI for better quality)
         images = convert_from_bytes(file_bytes, poppler_path=POPPLER_PATH, dpi=200)
-        print(f"DEBUG: Converted PDF to {len(images)} page images")
+        logger.debug(f"DEBUG: Converted PDF to {len(images)} page images")
         
         ocr_text = []
         for i, image in enumerate(images):
-            print(f"DEBUG: OCR Processing page {i+1}...")
+            logger.debug(f"DEBUG: OCR Processing page {i+1}...")
             # Preprocess image for better OCR
             processed_image = _preprocess_image_for_ocr(image)
             # Use PSM 4
@@ -625,7 +634,7 @@ def _extract_from_pdf_with_images(file_storage):
             'images': images  # Return original images, not preprocessed ones
         }
     except Exception as e:
-        print(f"DEBUG: PDF extraction with images failed: {e}")
+        logger.debug(f"DEBUG: PDF extraction with images failed: {e}")
         return {
             'text': '',
             'images': []
@@ -639,7 +648,7 @@ def _extract_from_image(file_storage):
     image = Image.open(file_storage)
     
     # Use advanced preprocessing for handwriting
-    print("DEBUG: Using advanced handwriting pipeline for standalone image...")
+    logger.debug("DEBUG: Using advanced handwriting pipeline for standalone image...")
     clean_document = _advanced_preprocess_for_handwriting(image)
     
     # Multi-pass OCR
@@ -672,7 +681,7 @@ def compute_image_similarity(pil_image1, pil_image2):
     Returns:
         float: Similarity score 0-100 (percentage)
     """
-    print("DEBUG [ImageSim]: Computing image structural similarity...")
+    logger.debug("DEBUG [ImageSim]: Computing image structural similarity...")
     
     # Convert PIL images to OpenCV grayscale
     img1 = _pil_to_cv2(pil_image1)
@@ -717,7 +726,7 @@ def compute_image_similarity(pil_image1, pil_image2):
     
     ssim_score = float(np.mean(ssim_map)) * 100
     ssim_score = max(0, ssim_score)
-    print(f"  DEBUG [SSIM-Binary]: Score = {ssim_score:.2f}%")
+    logger.debug(f"  DEBUG [SSIM-Binary]: Score = {ssim_score:.2f}%")
     
     # === METHOD 2: Zone-based text density comparison ===
     # Divide image into grid zones and compare text density per zone
@@ -757,7 +766,7 @@ def compute_image_similarity(pil_image1, pil_image2):
     else:
         zone_score = 0.0
     zone_score = max(0, zone_score)
-    print(f"  DEBUG [ZoneDensity]: Score = {zone_score:.2f}%")
+    logger.debug(f"  DEBUG [ZoneDensity]: Score = {zone_score:.2f}%")
     
     # === METHOD 3: Row-level horizontal projection profile ===
     # Creates a 1D "profile" of text density per row (how much text on each line)
@@ -792,7 +801,7 @@ def compute_image_similarity(pil_image1, pil_image2):
         profile_score = max(0, correlation * 100)
     else:
         profile_score = 0.0
-    print(f"  DEBUG [RowProfile]: Score = {profile_score:.2f}%")
+    logger.debug(f"  DEBUG [RowProfile]: Score = {profile_score:.2f}%")
     
     # === METHOD 4: Histogram comparison on binarized images ===
     hist1 = cv2.calcHist([bin1], [0], None, [256], [0, 256])
@@ -802,7 +811,7 @@ def compute_image_similarity(pil_image1, pil_image2):
     
     hist_score = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL) * 100
     hist_score = max(0, hist_score)
-    print(f"  DEBUG [Histogram-Binary]: Score = {hist_score:.2f}%")
+    logger.debug(f"  DEBUG [Histogram-Binary]: Score = {hist_score:.2f}%")
     
     # === METHOD 5: ORB Feature Matching on binarized images ===
     orb = cv2.ORB_create(nfeatures=1000)
@@ -819,7 +828,7 @@ def compute_image_similarity(pil_image1, pil_image2):
             total_kp = max(len(kp1), len(kp2))
             orb_score = (len(good_matches) / total_kp) * 100
             orb_score = min(100, orb_score)
-    print(f"  DEBUG [ORB-Binary]: Score = {orb_score:.2f}%")
+    logger.debug(f"  DEBUG [ORB-Binary]: Score = {orb_score:.2f}%")
     
     # === COMBINE SCORES ===
     # Adjusted weights to create more diverse and realistic scores:
@@ -831,6 +840,6 @@ def compute_image_similarity(pil_image1, pil_image2):
     final_score = (profile_score * 0.35) + (zone_score * 0.25) + (ssim_score * 0.20) + (hist_score * 0.10) + (orb_score * 0.10)
     final_score = round(min(100, max(0, final_score)), 2)
     
-    print(f"  DEBUG [ImageSim]: Final combined score = {final_score:.2f}%")
+    logger.debug(f"  DEBUG [ImageSim]: Final combined score = {final_score:.2f}%")
     return final_score
 

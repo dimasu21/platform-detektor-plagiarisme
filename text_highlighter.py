@@ -1,3 +1,6 @@
+import logging
+
+logger = logging.getLogger(__name__)
 """
 Text Highlighter Module
 
@@ -32,7 +35,7 @@ def highlight_text_matches(original_text, matches):
         words = match.lower().split()
         matched_words.update(words)
     
-    print(f"DEBUG: Words to highlight: {matched_words}")
+    logger.debug(f"DEBUG: Words to highlight: {matched_words}")
     
     # Build regex pattern to find these words in original text
     # Match whole words only, case-insensitive
@@ -49,7 +52,7 @@ def highlight_text_matches(original_text, matches):
     for m in re.finditer(pattern, original_text, re.IGNORECASE):
         highlights.append((m.start(), m.end()))
     
-    print(f"DEBUG: Found {len(highlights)} highlight positions")
+    logger.debug(f"DEBUG: Found {len(highlights)} highlight positions")
     
     # Merge overlapping highlights
     highlights = merge_overlapping_ranges(highlights)

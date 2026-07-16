@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="section-header">
+        <h2>Kelola Riwayat Scan</h2>
+        <p>Kelola seluruh riwayat pemeriksaan plagiarisme</p>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+        <div class="stat-card">
+            <span class="stat-label">Total Scan</span>
+            <span class="stat-value" style="color: #2196F3;">{{ history_stats.total }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Plagiat</span>
+            <span class="stat-value" style="color: #F44336;">{{ history_stats.plagiat }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Warning</span>
+            <span class="stat-value" style="color: #FF9800;">{{ history_stats.warning }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Aman</span>
+            <span class="stat-value" style="color: #4CAF50;">{{ history_stats.aman }}</span>
+        </div>
+    </div>
+
+    <!-- Delete All Button -->
+    {% if history|length > 0 %}
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+        <form method="POST" action="{{ url_for('admin_delete_all_history') }}"
+              onsubmit="return confirm('PERINGATAN!\n\nAnda akan menghapus SEMUA riwayat scan ({{ history_stats.total }} record).\n\nTindakan ini tidak dapat dibatalkan.\n\nLanjutkan?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <button type="submit" class="btn-delete-all">
+                Hapus Semua Riwayat
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- History Table -->
+    <div class="users-table-container">
+        <table class="users-table" id="historyTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tanggal</th>
+                    <th>User</th>
+                    <th>Dokumen Uji</th>
+                    <th>Metode</th>
+                    <th>Skor</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for scan in history %}
+                <tr>
+                    <td>{{ scan.id }}</td>
+                    <td style="font-size: 0.9rem; white-space: nowrap;">{{ scan.date }}</td>
+                    <td>{{ scan.user_name }}</td>
+                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ scan.suspect_filename }}">
+                        {{ scan.suspect_filename }}
+                    </td>
+                    <td>
+                        <span style="background: var(--bg-gray); padding: 4px 10px; border-radius: 100px; font-size: 0.85rem;">
+                            {{ scan.method }}
+                        </span>
+                    </td>
+                    <td style="font-weight: bold; text-align: center;">{{ scan.score }}%</td>
+                    <td style="text-align: center;">
+                        {% if scan.status == 'Aman' %}
+                        <span class="status-badge status-aman">Aman</span>
+                        {% elif scan.status == 'Warning' %}
+                        <span class="status-badge status-warning">Warning</span>
+                        {% else %}
+                        <span class="status-badge status-plagiat">Plagiat</span>
+                        {% endif %}
+                    </td>
+                    <td class="actions-cell">
+                        <form method="POST" action="{{ url_for('admin_delete_history', scan_id=scan.id) }}"
+                              style="display: inline;"
+                              onsubmit="return confirm('Hapus riwayat #{{ scan.id }}?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" class="btn-small btn-danger" title="Hapus">Hapus</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% if history|length == 0 %}
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-gray); font-style: italic;">
+                        Belum ada riwayat scan.
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

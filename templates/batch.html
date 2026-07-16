@@ -10,6 +10,7 @@
     <div class="detector-grid">
         <form method="POST" action="{{ url_for('batch_comparison') }}" class="detector-form"
             enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="batch-upload-section">
                 <label for="documents">Unggah Jawaban Mahasiswa</label>
                 <p class="upload-hint">Pilih 2-30 file (.txt, .docx, .pdf, .png, .jpg)</p>

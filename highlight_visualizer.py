@@ -1,6 +1,9 @@
+import logging
 import pytesseract
 from PIL import Image, ImageDraw, ImageFont
 import os
+
+logger = logging.getLogger(__name__)
 
 def extract_text_with_boxes(image, lang='ind+eng'):
     """
@@ -220,7 +223,7 @@ def save_highlighted_image(image, output_path):
     
     # Save image
     image.save(output_path, 'PNG')
-    print(f"DEBUG: Saved highlighted image to {output_path}")
+    logger.debug(f"DEBUG: Saved highlighted image to {output_path}")
 
 def highlight_plagiarism_in_images(images, matched_phrases):
     """
@@ -239,7 +242,7 @@ def highlight_plagiarism_in_images(images, matched_phrases):
     highlighted_images = []
     
     for page_num, image in enumerate(images, 1):
-        print(f"DEBUG: Processing highlights for page {page_num}...")
+        logger.debug(f"DEBUG: Processing highlights for page {page_num}...")
         
         # Preprocess image for better OCR box detection
         preprocessed = image  # fallback to original
@@ -249,7 +252,7 @@ def highlight_plagiarism_in_images(images, matched_phrases):
             # Get OCR data from preprocessed image for accurate boxes
             ocr_data = extract_text_with_boxes(preprocessed)
         except Exception as e:
-            print(f"DEBUG: Advanced preprocessing failed for highlighting, using original: {e}")
+            logger.debug(f"DEBUG: Advanced preprocessing failed for highlighting, using original: {e}")
             preprocessed = image
             ocr_data = extract_text_with_boxes(image)
         
@@ -282,7 +285,7 @@ def highlight_plagiarism_in_images(images, matched_phrases):
             if y1 > header_threshold:
                 filtered_boxes.append(box)
         
-        print(f"DEBUG: Found {len(filtered_boxes)} highlight regions on page {page_num} (after header filtering)")
+        logger.debug(f"DEBUG: Found {len(filtered_boxes)} highlight regions on page {page_num} (after header filtering)")
         
         # Draw highlights on the ORIGINAL image (not preprocessed)
         highlighted_img = draw_highlights(image, filtered_boxes)

@@ -7,6 +7,7 @@
         <p>Create a new account to access plagiarism detection system</p>
 
         <form method="POST" action="{{ url_for('register') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="form-group">
                 <label for="name">Full Name</label>
                 <input type="text" id="name" name="name" required autofocus>

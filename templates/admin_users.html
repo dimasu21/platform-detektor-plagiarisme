@@ -60,6 +60,7 @@
                         {% if user.id != current_user.id %}
                         <form method="POST" action="{{ url_for('admin_toggle_role', user_id=user.id) }}"
                             style="display: inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <button type="submit" class="btn-small btn-secondary" title="Toggle Role">
                                 {% if user.role == 'admin' %}Make User{% else %}Make Admin{% endif %}
                             </button>
@@ -67,6 +68,7 @@
                         <form method="POST" action="{{ url_for('admin_delete_user', user_id=user.id) }}"
                             style="display: inline;"
                             onsubmit="return confirm('Are you sure you want to delete this user?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <button type="submit" class="btn-small btn-danger" title="Delete User">Delete</button>
                         </form>
                         {% else %}

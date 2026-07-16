@@ -1,0 +1,21 @@
+venv/
+__pycache__/
+*.pyc
+.env
+instance/
+*.db
+*.sqlite
+*.sqlite3
+static/uploads/
+.git/
+.gitignore
+scratch/
+test_files/
+Data Citra/
+*.backup
+*.bak
+*.log
+*.tmp
+*.temp
+.vscode/
+.idea/

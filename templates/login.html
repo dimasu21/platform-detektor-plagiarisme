@@ -5,6 +5,7 @@
     <p>Masuk untuk mulai mendeteksi plagiarisme</p>
 
     <form method="POST" action="{{ url_for('login') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       <div class="form-group">
         <label for="email">Email</label>
         <input

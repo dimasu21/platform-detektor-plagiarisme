@@ -1,3 +1,6 @@
+import logging
+
+logger = logging.getLogger(__name__)
 """
 Modul Algoritma Rabin-Karp
 
@@ -168,8 +171,8 @@ def detect_plagiarism(suspect_text, source_text, k=3):
 
     similarity_score = (2 * C) / (A + B) * 100 if (A + B) > 0 else 0.0
 
-    print(f"DEBUG Rabin-Karp: K-Gram={k}, Suspect={A}, Source={B}, Match={C}")
-    print(f"DEBUG Rabin-Karp: Dice = (2×{C}) / ({A}+{B}) × 100 = {similarity_score:.2f}%")
+    logger.debug(f"DEBUG Rabin-Karp: K-Gram={k}, Suspect={A}, Source={B}, Match={C}")
+    logger.debug(f"DEBUG Rabin-Karp: Dice = (2×{C}) / ({A}+{B}) × 100 = {similarity_score:.2f}%")
 
     # Ekstrak segmen teks yang cocok untuk keperluan highlighting
     matching_positions = []

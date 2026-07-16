@@ -9,6 +9,7 @@
 
     <div class="detector-grid">
         <form method="POST" action="{{ url_for('compare') }}" class="detector-form" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="input-group">
                 <div class="input-box">
                     <label for="suspect_text">Jawaban Mahasiswa</label>

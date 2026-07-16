@@ -12,6 +12,7 @@
         <div class="profile-card">
             <h3>Profile Information</h3>
             <form method="POST" action="{{ url_for('profile') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <input type="hidden" name="action" value="update_profile">
 
                 <div class="form-group">
@@ -43,6 +44,7 @@
         <div class="profile-card">
             <h3>Change Password</h3>
             <form method="POST" action="{{ url_for('profile') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <input type="hidden" name="action" value="change_password">
 
                 <div class="form-group">

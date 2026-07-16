@@ -1,33 +1,109 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from preprocessing import preprocess_text
-from rabin_karp import detect_plagiarism
-from models import db, User, ScanHistory
-from database import init_db, get_db_stats
+import logging
 import os
 import uuid
 import time
 from datetime import datetime, timedelta, timezone
+from urllib.parse import urlparse
+
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from dotenv import load_dotenv
+
+from preprocessing import preprocess_text
+from rabin_karp import detect_plagiarism
+from models import db, User, ScanHistory
+from database import init_db, get_db_stats
 
 # Load environment variables
 load_dotenv()
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 app = Flask(__name__)
 
-# Configuration
+# ==================== CONFIGURATION ====================
+
+# Security: Strong secret key (MUST be set in .env for production)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///plagiarism.db'
+if app.config['SECRET_KEY'] == 'dev-secret-key-change-in-production':
+    logger.warning("⚠️  WARNING: Using default SECRET_KEY! Set a strong key in .env for production.")
+
+# Database
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///plagiarism.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Initialize extensions
+# Upload size limit: 16 MB max
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
+# Secure cookie configuration
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['REMEMBER_COOKIE_HTTPONLY'] = True
+
+# Enable secure cookies only when not in development
+if os.environ.get('FLASK_ENV') == 'production':
+    app.config['SESSION_COOKIE_SECURE'] = True
+    app.config['REMEMBER_COOKIE_SECURE'] = True
+
+# ==================== INITIALIZE EXTENSIONS ====================
+
+# CSRF Protection
+csrf = CSRFProtect(app)
+
+# Database
 db.init_app(app)
+
+# Login Manager
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 login_manager.login_message = 'Please log in to access this page.'
 
+# Rate Limiter
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://",
+)
+
 # Initialize database
 init_db(app)
+
+
+# ==================== SECURITY HEADERS ====================
+
+@app.after_request
+def set_security_headers(response):
+    """Add security headers to every response."""
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    if os.environ.get('FLASK_ENV') == 'production':
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    return response
+
+
+# ==================== ERROR HANDLERS ====================
+
+@app.errorhandler(413)
+def too_large(e):
+    flash('File terlalu besar. Maksimal 16 MB.', 'error')
+    return redirect(request.referrer or url_for('dashboard')), 413
+
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    flash('Terlalu banyak percobaan. Silakan tunggu beberapa saat.', 'error')
+    return redirect(url_for('login')), 429
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -42,6 +118,7 @@ def index():
     return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
+@limiter.limit("10 per minute")
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
@@ -59,15 +136,18 @@ def login():
             
             flash(f'Welcome back, {user.name}!', 'success')
             
-            # Redirect to next page or dashboard
+            # Secure redirect: only allow relative URLs (prevent open redirect)
             next_page = request.args.get('next')
-            return redirect(next_page) if next_page else redirect(url_for('dashboard'))
+            if next_page and urlparse(next_page).netloc == '':
+                return redirect(next_page)
+            return redirect(url_for('dashboard'))
         else:
             flash('Invalid email or password.', 'error')
     
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
@@ -226,8 +306,8 @@ def compare():
             suspect_processed = preprocess_text(suspect_data['text'])
             source_processed = preprocess_text(source_data['text'])
             
-            print(f"DEBUG: Suspect Processed Length: {len(suspect_processed)}")
-            print(f"DEBUG: Source Processed Length: {len(source_processed)}")
+            logger.info(f"Suspect Processed Length: {len(suspect_processed)}")
+            logger.info(f"Source Processed Length: {len(source_processed)}")
             
             if not suspect_processed or not source_processed:
                 flash('Teks tidak terbaca dari file.', 'error')
@@ -251,7 +331,7 @@ def compare():
                 
                 # Highlight images if available
                 if suspect_data['images'] and result['matches']:
-                    print(f"DEBUG: Highlighting {len(suspect_data['images'])} suspect images...")
+                    logger.info(f"Highlighting {len(suspect_data['images'])} suspect images...")
                     highlighted_suspect = highlight_plagiarism_in_images(
                         suspect_data['images'], 
                         result['matches']
@@ -273,7 +353,7 @@ def compare():
                         suspect_images.append(f"uploads/highlighted/{filename}")
                 
                 if source_data['images'] and result['matches']:
-                    print(f"DEBUG: Highlighting {len(source_data['images'])} source images...")
+                    logger.info(f"Highlighting {len(source_data['images'])} source images...")
                     highlighted_source = highlight_plagiarism_in_images(
                         source_data['images'],
                         result['matches']
@@ -416,6 +496,81 @@ def admin_toggle_role(user_id):
     flash(f'User {user.email} role changed to {user.role}.', 'success')
     return redirect(url_for('admin_users'))
 
+# ==================== ADMIN HISTORY ROUTES ====================
+
+@app.route('/admin/history')
+@login_required
+def admin_history():
+    if not current_user.is_admin():
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    # Get all scan history with user info
+    scans = ScanHistory.query.order_by(ScanHistory.date.desc()).all()
+    history_list = []
+    for scan in scans:
+        # Convert UTC to WIB (UTC+7)
+        local_date_obj = scan.date + timedelta(hours=7)
+        local_date = local_date_obj.strftime('%Y-%m-%d %H:%M')
+        
+        # Get user name
+        user = User.query.get(scan.user_id)
+        user_name = user.name if user else 'Unknown'
+        
+        history_list.append({
+            'id': scan.id,
+            'date': local_date,
+            'user_name': user_name,
+            'suspect_filename': scan.suspect_filename,
+            'method': scan.method,
+            'score': scan.score,
+            'status': scan.status
+        })
+    
+    # Stats
+    total_scans = len(scans)
+    plagiat_count = sum(1 for s in scans if s.status == 'Plagiat')
+    warning_count = sum(1 for s in scans if s.status == 'Warning')
+    aman_count = sum(1 for s in scans if s.status == 'Aman')
+    
+    history_stats = {
+        'total': total_scans,
+        'plagiat': plagiat_count,
+        'warning': warning_count,
+        'aman': aman_count
+    }
+    
+    return render_template('admin_history.html', history=history_list, history_stats=history_stats)
+
+
+@app.route('/admin/history/<int:scan_id>/delete', methods=['POST'])
+@login_required
+def admin_delete_history(scan_id):
+    if not current_user.is_admin():
+        flash('Access denied.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    scan = ScanHistory.query.get_or_404(scan_id)
+    db.session.delete(scan)
+    db.session.commit()
+    
+    flash(f'Riwayat #{scan_id} berhasil dihapus.', 'success')
+    return redirect(url_for('admin_history'))
+
+@app.route('/admin/history/delete-all', methods=['POST'])
+@login_required
+def admin_delete_all_history():
+    if not current_user.is_admin():
+        flash('Access denied.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    count = ScanHistory.query.count()
+    ScanHistory.query.delete()
+    db.session.commit()
+    
+    flash(f'Semua riwayat ({count} record) berhasil dihapus.', 'success')
+    return redirect(url_for('admin_history'))
+
 # ==================== BATCH COMPARISON ====================
 
 @app.route('/batch', methods=['GET', 'POST'])
@@ -443,7 +598,7 @@ def batch_comparison():
                 matrix = results['matrix']
                 doc_names = results['document_names']
             except Exception as e:
-                print(f"Error loading batch results: {e}")
+                logger.error(f"Error loading batch results: {e}")
                 results = None
     
     if request.method == 'POST':
@@ -557,7 +712,7 @@ def batch_detail(pair_index):
                 with open(batch_file_path, 'r', encoding='utf-8') as f:
                     results = json.load(f)
             except Exception as e:
-                print(f"Error loading batch results for detail view: {e}")
+                logger.error(f"Error loading batch results for detail view: {e}")
                 
     if not results or pair_index >= len(results['pairs']):
         flash('Comparison data not found. Please run batch comparison again.', 'error')
@@ -611,4 +766,4 @@ def batch_detail(pair_index):
                          doc2_images=doc2_highlighted if doc2_highlighted else raw_doc2_images)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
