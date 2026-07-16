@@ -351,8 +351,8 @@ def _clean_ocr_text(raw_text):
         alpha_count = sum(1 for c in stripped if c.isalpha())
         total_count = len(stripped)
         
-        # Keep lines that are at least 40% alphabetic and have 3+ alpha chars
-        if total_count > 0 and alpha_count >= 3 and (alpha_count / total_count) >= 0.4:
+        # Keep lines that are at least 15% alphabetic and have 2+ alpha chars
+        if total_count > 0 and alpha_count >= 2 and (alpha_count / total_count) >= 0.15:
             cleaned_lines.append(stripped)
     
     text = ' '.join(cleaned_lines)
@@ -369,13 +369,13 @@ def _clean_ocr_text(raw_text):
     # 6. Collapse multiple spaces
     text = re.sub(r'\s+', ' ', text).strip()
     
-    # 7. Remove single-character "words" that are OCR noise (except 'a', 'i', 'di', etc.)
-    valid_single_chars = {'a', 'i', 'o', 'u', 'e'}
+    # 7. Remove single-character "words" that are OCR noise
+    # RELAXED: We shouldn't aggressively drop them because it destroys words in noisy OCR output.
     words = text.split()
     filtered_words = []
     for word in words:
-        # Keep the word if it's longer than 1 char, or is a valid single char
-        if len(word) > 1 or word.lower() in valid_single_chars:
+        # Keep the word unless it's a completely invalid standalone symbol
+        if len(word) > 1 or word.isalpha() or word.isdigit():
             filtered_words.append(word)
     text = ' '.join(filtered_words)
     
@@ -421,7 +421,7 @@ def _multi_pass_ocr(processed_image, lang='ind+eng'):
                 best_text = text
                 best_config_name = name
         except Exception as e:
-            logger.debug(f"  DEBUG [MultiOCR] {name} failed: {e}")
+            logger.error(f"  ERROR [MultiOCR] {name} failed: {e}", exc_info=True)
     
     logger.debug(f"  DEBUG [MultiOCR]: Best config = {best_config_name} (score={best_score})")
     return best_text
@@ -537,7 +537,7 @@ def extract_text_and_images_from_file(file_storage):
             result['images'] = []
             
     except Exception as e:
-        logger.debug(f"Error extracting from {filename}: {e}")
+        logger.error(f"Error extracting from {filename}: {e}", exc_info=True)
         import traceback
         traceback.print_exc()
     

@@ -24,6 +24,7 @@ RUN mkdir -p static/uploads/highlighted static/uploads/batch_results
 ENV TESSERACT_CMD=/usr/bin/tesseract
 ENV POPPLER_PATH=
 ENV FLASK_ENV=production
+ENV OMP_THREAD_LIMIT=1
 
 EXPOSE 8000
 
