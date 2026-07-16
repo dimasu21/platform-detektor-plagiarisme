@@ -71,13 +71,16 @@ body {
 .logo-area {
     display: flex;
     align-items: center;
-    gap: 10px;
+    
+}
+.logo-area > * + * { margin-left: 10px; } /* removed gap */
 }
 
 .logo-icon {
     font-size: 1.5rem;
 }
-.logo-area h1 {
+
+.logo-area h1 {
     font-size: 1.4rem;
     font-weight: 600;
     color: var(--text-dark);
@@ -128,7 +131,9 @@ body {
 .header-nav {
     display: flex;
     align-items: center;
-    gap: 8px;
+    
+}
+.header-nav > * + * { margin-left: 8px; } /* removed gap */
 }
 
 .nav-link {
@@ -151,7 +156,9 @@ body {
 .user-area {
     display: flex;
     align-items: center;
-    gap: 12px;
+    
+}
+.user-area > * + * { margin-left: 12px; } /* removed gap */
     margin-left: 10px;
     padding-left: 20px;
     border-left: 1px solid var(--border-color);
@@ -201,7 +208,9 @@ main {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    
+}
+.btn-primary > * + * { margin-left: 8px; } /* removed gap */
 }
 
 .btn-primary:hover {
@@ -356,7 +365,9 @@ input[type="file"] {
 .detector-grid {
     display: flex;
     flex-direction: column;
-    gap: 40px;
+    
+}
+.detector-grid > * + * { margin-top: 40px; } /* removed gap */
 }
 
 .detector-form {
@@ -370,11 +381,11 @@ input[type="file"] {
 .input-group {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 30px;
+    grid-gap: 30px;
     margin-bottom: 30px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 992px) {
     .input-group {
         grid-template-columns: 1fr;
     }
@@ -392,7 +403,9 @@ input[type="file"] {
     margin-bottom: 15px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    
+}
+.input-box label > * + * { margin-left: 8px; } /* removed gap */
 }
 
 .input-box label::before {
@@ -496,7 +509,9 @@ input[type="file"] {
     margin-bottom: 15px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    
+}
+.text-comparison-section h4 > * + * { margin-left: 10px; } /* removed gap */
 }
 
 .comparison-legend {
@@ -508,7 +523,9 @@ input[type="file"] {
     color: var(--text-gray);
     display: flex;
     align-items: center;
-    gap: 10px;
+    
+}
+.comparison-legend > * + * { margin-left: 10px; } /* removed gap */
     border: 1px solid var(--border-color);
 }
 
@@ -523,7 +540,7 @@ input[type="file"] {
 .text-comparison-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 25px;
+    grid-gap: 25px;
 }
 
 @media (max-width: 968px) {
@@ -547,7 +564,9 @@ input[type="file"] {
     border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
-    gap: 10px;
+    
+}
+.text-panel h5 > * + * { margin-left: 10px; } /* removed gap */
 }
 
 .text-panel.suspect-panel h5 {
@@ -584,7 +603,9 @@ input[type="file"] {
 .image-source-notice {
     display: flex;
     align-items: center;
-    gap: 12px;
+    
+}
+.image-source-notice > * + * { margin-left: 12px; } /* removed gap */
     padding: 18px 24px;
     background: linear-gradient(135deg, #EEF2FF, #E0E7FF);
     border: 1px solid #C7D2FE;
@@ -626,7 +647,7 @@ input[type="file"] {
 .documents-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 30px;
+    grid-gap: 30px;
 }
 
 @media (max-width: 968px) {
@@ -650,7 +671,9 @@ input[type="file"] {
 .document-images {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    
+}
+.document-images > * + * { margin-top: 20px; } /* removed gap */
     margin-bottom: 20px;
     max-height: 500px;
     overflow-y: auto;
@@ -687,7 +710,9 @@ input[type="file"] {
 .btn-download {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    
+}
+.btn-download > * + * { margin-left: 8px; } /* removed gap */
     background-color: var(--accent-lime);
     color: var(--text-dark);
     text-decoration: none;
@@ -748,7 +773,7 @@ input[type="file"] {
 .profile-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 30px;
+    grid-gap: 30px;
 }
 
 @media (max-width: 968px) {
@@ -790,11 +815,11 @@ input[type="file"] {
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    grid-gap: 20px;
     margin-bottom: 40px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 992px) {
     .stats-grid {
         grid-template-columns: 1fr;
     }
@@ -959,7 +984,7 @@ input[type="file"] {
 
 /* ==================== MOBILE RESPONSIVE ==================== */
 
-@media (max-width: 768px) {
+@media (max-width: 992px) {
     .main-header .container {
         flex-direction: column;
         gap: 15px;
@@ -1025,7 +1050,7 @@ input[type="file"] {
     gap: 15px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 992px) {
     .interpretation-grid {
         grid-template-columns: 1fr;
     }
@@ -1150,7 +1175,7 @@ input[type="file"] {
     }
 
     .input-group {
-        gap: 20px;
+        grid-gap: 20px;
     }
 
     .input-box label {
@@ -1216,7 +1241,7 @@ input[type="file"] {
 
     .stats-grid {
         grid-template-columns: 1fr;
-        gap: 12px;
+        grid-gap: 12px;
     }
 
     .stat-card {
@@ -1371,7 +1396,7 @@ input[type="file"] {
 }
 
 /* Mobile navigation styles */
-@media (max-width: 768px) {
+@media (max-width: 992px) {
     .burger-menu {
         display: flex;
     }
@@ -1462,7 +1487,7 @@ input[type="file"] {
 /* ==================== FIX MOBILE LAYOUT ==================== */
 
 /* Header layout fix - burger on right */
-@media (max-width: 768px) {
+@media (max-width: 992px) {
     .main-header .container {
         display: flex;
         justify-content: space-between;
@@ -1517,7 +1542,7 @@ input[type="file"] {
     .input-group {
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        grid-gap: 20px;
     }
 
     .input-box {
@@ -1757,7 +1782,7 @@ input[type="file"] {
 }
 
 /* --- Tablet Portrait / Small Tablet (max-width: 768px) --- */
-@media (max-width: 768px) {
+@media (max-width: 992px) {
 
     /* Typography */
     .section-header h2 {
@@ -1776,7 +1801,7 @@ input[type="file"] {
     .input-group {
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        grid-gap: 20px;
     }
 
     .input-box {
@@ -1967,7 +1992,7 @@ input[type="file"] {
     /* All stats grids go single column on very small screens */
     .stats-grid {
         grid-template-columns: 1fr !important;
-        gap: 12px;
+        grid-gap: 12px;
     }
 
     .stat-card {
