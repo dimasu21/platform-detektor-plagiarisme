@@ -614,78 +614,60 @@ def batch_comparison():
             flash('Maximum 30 documents allowed.', 'error')
             return render_template('batch.html')
         
-        # Extract text from all files
-        documents = []
         batch_id = str(uuid.uuid4())[:8]
+        
+        # Save files temporarily for the background worker
+        temp_dir = os.path.join('static', 'uploads', f'temp_batch_{batch_id}')
+        os.makedirs(temp_dir, exist_ok=True)
+        
+        saved_paths = []
+        original_names = []
         
         for idx, f in enumerate(files):
             if f.filename:
-                data = extract_text_and_images_from_file(f)
-                if data.get('error'):
-                    flash(f"Error on {f.filename}: {data['error']}", 'error')
-                elif data and data['text']:
-                    # Save images to files if present
-                    image_paths = []
-                    if data.get('images'):
-                        for img_idx, img in enumerate(data['images']):
-                            img_filename = f'batch_{batch_id}_{idx}_{img_idx}.png'
-                            img_path = os.path.join('static', 'uploads', img_filename)
-                            os.makedirs(os.path.dirname(img_path), exist_ok=True)
-                            img.save(img_path, 'PNG')
-                            image_paths.append(f'uploads/{img_filename}')
-                    
-                    documents.append({
-                        'name': f.filename,
-                        'text': data['text'],
-                        'images': image_paths  # Store paths, not PIL objects
-                    })
-                else:
-                    flash(f'Could not extract text from: {f.filename}', 'error')
-        
-        if len(documents) < 2:
-            flash('Need at least 2 valid documents with extractable text.', 'error')
+                # generate safe temp filename
+                safe_name = f"{idx}_{secure_filename(f.filename)}"
+                temp_path = os.path.join(temp_dir, safe_name)
+                f.save(temp_path)
+                saved_paths.append(temp_path)
+                original_names.append(f.filename)
+                
+        if len(saved_paths) < 2:
+            flash('Need at least 2 valid documents.', 'error')
+            import shutil
+            shutil.rmtree(temp_dir, ignore_errors=True)
             return render_template('batch.html')
-        
-        # Run cross-comparison
-        results = compare_all_pairs(documents)
-        stats = get_comparison_stats(results['pairs'])
-        suspicious = get_suspicious_pairs(results['pairs'], threshold=50)
-        matrix = results['matrix']
-        doc_names = results['document_names']
-        
-        # Save results to a JSON file instead of the session cookie
-        # (Session cookies have a 4KB limit and will silently fail to save large text data)
-        import json
-        batch_results_dir = os.path.join('static', 'uploads', 'batch_results')
-        os.makedirs(batch_results_dir, exist_ok=True)
-        
-        batch_file_path = os.path.join(batch_results_dir, f'{batch_id}.json')
-        with open(batch_file_path, 'w', encoding='utf-8') as f:
-            json.dump(results, f)
             
-        # Store ONLY the batch_id in session for detail view and back navigation
-        session['batch_id'] = batch_id
+        # Initialize status JSON
+        from async_batch import process_batch_async
+        import threading
         
-        # Record Scan History for the batch
-        max_score = 0.0
-        if results['pairs']:
-            max_score = float(max([p['similarity'] for p in results['pairs']])) # type: ignore
+        status_dir = os.path.join('static', 'uploads', 'batch_results')
+        os.makedirs(status_dir, exist_ok=True)
+        status_file = os.path.join(status_dir, f'{batch_id}_status.json')
+        
+        with open(status_file, 'w', encoding='utf-8') as sf:
+            import json
+            json.dump({
+                'status': 'starting',
+                'progress': 0,
+                'message': 'Menyiapkan proses...',
+                'error': None,
+                'is_complete': False
+            }, sf)
             
-        status = 'Aman'
-        if max_score >= 90:
-            status = 'Plagiat'
-        elif max_score >= 60:
-            status = 'Warning'
-            
-        new_scan = ScanHistory(
-            user_id=current_user.id,
-            suspect_filename=f"Batch: {len(documents)} docs",
-            method='Batch Check',
-            score=max_score,
-            status=status
+        # Spawn thread
+        app_context = app.app_context()
+        user_id = current_user.id if current_user.is_authenticated else None
+        
+        thread = threading.Thread(
+            target=process_batch_async,
+            args=(batch_id, saved_paths, original_names, user_id, app_context)
         )
-        db.session.add(new_scan)
-        db.session.commit()
+        thread.daemon = True
+        thread.start()
+        
+        return redirect(url_for('batch_processing', batch_id=batch_id))
         
 
     
@@ -695,6 +677,26 @@ def batch_comparison():
                          suspicious=suspicious,
                          matrix=matrix,
                          doc_names=doc_names)
+
+@app.route('/batch_processing/<batch_id>')
+@login_required
+def batch_processing(batch_id):
+    return render_template('batch_processing.html', batch_id=batch_id)
+
+@app.route('/api/batch_status/<batch_id>')
+@login_required
+def batch_status(batch_id):
+    status_file = os.path.join('static', 'uploads', 'batch_results', f'{batch_id}_status.json')
+    if not os.path.exists(status_file):
+        return jsonify({'error': 'Status not found'}), 404
+        
+    try:
+        import json
+        with open(status_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/batch/detail/<int:pair_index>')
 @login_required

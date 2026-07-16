@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="batch-processing-container">
+    <div class="loading-card">
+        <h2 class="section-title">Memproses Gambar...</h2>
+        
+        <div class="progress-bar-container">
+            <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+        </div>
+        
+        <p id="statusMessage" class="status-message">Menyiapkan proses...</p>
+        
+        <div id="errorBox" class="alert alert-error" style="display: none; margin-top: 1rem;">
+            <strong>Error:</strong> <span id="errorMessage"></span>
+            <br><br>
+            <a href="{{ url_for('batch_comparison') }}" class="btn btn-outline">Kembali</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.batch-processing-container {
+    max-width: 600px;
+    margin: 4rem auto;
+    padding: 1rem;
+}
+.loading-card {
+    background: white;
+    border-radius: var(--radius-lg, 16px);
+    padding: 3rem 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    text-align: center;
+}
+.progress-bar-container {
+    height: 12px;
+    background: #f0f0f0;
+    border-radius: 10px;
+    margin: 2rem 0;
+    overflow: hidden;
+}
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #A8FF78 0%, #78FFD6 100%);
+    width: 0%;
+    transition: width 0.5s ease;
+}
+.status-message {
+    color: #666;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const batchId = '{{ batch_id }}';
+    const progressBar = document.getElementById('progressBar');
+    const statusMessage = document.getElementById('statusMessage');
+    const errorBox = document.getElementById('errorBox');
+    const errorMessage = document.getElementById('errorMessage');
+    
+    let checkInterval = setInterval(checkStatus, 2000);
+    
+    function checkStatus() {
+        fetch(`/api/batch_status/${batchId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error && data.is_complete) {
+                    clearInterval(checkInterval);
+                    errorBox.style.display = 'block';
+                    errorMessage.textContent = data.message + ' ' + (data.error || '');
+                    statusMessage.textContent = 'Proses Gagal';
+                    progressBar.style.background = '#ff6b6b';
+                    return;
+                }
+                
+                progressBar.style.width = `${data.progress}%`;
+                statusMessage.textContent = data.message;
+                
+                if (data.is_complete && data.status === 'completed') {
+                    clearInterval(checkInterval);
+                    setTimeout(() => {
+                        window.location.href = `/batch?batch_id=${batchId}`;
+                    }, 1000);
+                }
+            })
+            .catch(err => {
+                console.error("Error fetching status:", err);
+            });
+    }
+});
+</script>
+{% endblock %}
