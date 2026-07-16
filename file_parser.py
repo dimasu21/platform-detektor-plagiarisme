@@ -341,7 +341,6 @@ def _clean_ocr_text(raw_text):
     text = re.sub(r'[_]{2,}', ' ', text)
     
     # 3. Remove lines that are mostly non-alphabetic (likely noise/headers)
-    # RELAXED: only require 15% alphabetic characters so we don't drop math formulas or messy handwriting
     cleaned_lines = []
     for line in text.split('\n'):
         stripped = line.strip()
@@ -352,8 +351,8 @@ def _clean_ocr_text(raw_text):
         alpha_count = sum(1 for c in stripped if c.isalpha())
         total_count = len(stripped)
         
-        # Keep lines that are at least 15% alphabetic and have 2+ alpha chars
-        if total_count > 0 and alpha_count >= 2 and (alpha_count / total_count) >= 0.15:
+        # Keep lines that are at least 40% alphabetic and have 3+ alpha chars
+        if total_count > 0 and alpha_count >= 3 and (alpha_count / total_count) >= 0.4:
             cleaned_lines.append(stripped)
     
     text = ' '.join(cleaned_lines)
@@ -370,14 +369,13 @@ def _clean_ocr_text(raw_text):
     # 6. Collapse multiple spaces
     text = re.sub(r'\s+', ' ', text).strip()
     
-    # 7. Remove single-character "words" that are OCR noise
-    # RELAXED: In messy handwriting, characters are often separated by spaces.
-    # We shouldn't aggressively drop them because it destroys the words.
+    # 7. Remove single-character "words" that are OCR noise (except 'a', 'i', 'di', etc.)
+    valid_single_chars = {'a', 'i', 'o', 'u', 'e'}
     words = text.split()
     filtered_words = []
     for word in words:
-        # Keep the word unless it's a completely invalid standalone symbol
-        if len(word) > 1 or word.isalpha() or word.isdigit():
+        # Keep the word if it's longer than 1 char, or is a valid single char
+        if len(word) > 1 or word.lower() in valid_single_chars:
             filtered_words.append(word)
     text = ' '.join(filtered_words)
     
