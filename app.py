@@ -585,7 +585,9 @@ def batch_comparison():
     doc_names = None
     
     # Handle GET request - try to load previous results
-    batch_id = session.get('batch_id')
+    batch_id = request.args.get('batch_id') or session.get('batch_id')
+    if batch_id:
+        session['batch_id'] = batch_id  # Save to session for detail view
     if batch_id and request.method == 'GET':
         import json
         batch_file_path = os.path.join('static', 'uploads', 'batch_results', f'{batch_id}.json')

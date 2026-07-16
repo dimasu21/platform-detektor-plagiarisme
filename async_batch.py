@@ -31,28 +31,65 @@ def process_batch_async(batch_id, file_paths, original_filenames, current_user_i
             for idx, (path, original_name) in enumerate(zip(file_paths, original_filenames)):
                 update_status('processing', int((idx / total_files) * 50), f"Memproses gambar {idx+1} dari {total_files}...")
                 
-                with open(path, 'rb') as f_in:
-                    mock_f = FileStorage(stream=f_in, filename=original_name)
-                    data = extract_text_and_images_from_file(mock_f)
+                try:
+                    ext = original_name.rsplit('.', 1)[1].lower() if '.' in original_name else ''
                     
-                    if data.get('error'):
-                        logger.error(f"Error on {original_name}: {data['error']}")
-                        errors.append({'filename': original_name, 'error': data['error']})
-                    elif data and data.get('text'):
-                        image_paths = []
-                        if data.get('images'):
-                            for img_idx, img in enumerate(data['images']):
-                                img_filename = f'batch_{batch_id}_{idx}_{img_idx}.png'
-                                img_path = os.path.join('static', 'uploads', img_filename)
-                                os.makedirs(os.path.dirname(img_path), exist_ok=True)
-                                img.save(img_path, 'PNG')
-                                image_paths.append(f'uploads/{img_filename}')
+                    if ext in ['png', 'jpg', 'jpeg']:
+                        # For images, open directly with PIL and run the OCR pipeline
+                        from PIL import Image
+                        image = Image.open(path)
+                        original_image = image.copy()
                         
-                        documents.append({
-                            'name': original_name,
-                            'text': data['text'],
-                            'images': image_paths
-                        })
+                        from file_parser import _advanced_preprocess_for_handwriting, _multi_pass_ocr, _clean_ocr_text
+                        
+                        clean_document = _advanced_preprocess_for_handwriting(image)
+                        raw_text = _multi_pass_ocr(clean_document, lang='ind+eng')
+                        clean_text = _clean_ocr_text(raw_text)
+                        
+                        if clean_text:
+                            # Save original image for highlighting
+                            img_filename = f'batch_{batch_id}_{idx}_0.png'
+                            img_path = os.path.join('static', 'uploads', img_filename)
+                            os.makedirs(os.path.dirname(img_path), exist_ok=True)
+                            original_image.save(img_path, 'PNG')
+                            
+                            documents.append({
+                                'name': original_name,
+                                'text': clean_text,
+                                'images': [f'uploads/{img_filename}']
+                            })
+                        else:
+                            err_msg = f"Filter dropped all text. Raw: {raw_text[:80]}..." if raw_text else "Tesseract OCR found 0 words."
+                            errors.append({'filename': original_name, 'error': err_msg})
+                            logger.error(f"OCR failed for {original_name}: {err_msg}")
+                    else:
+                        # For non-image files (pdf, docx, txt), use the original FileStorage approach
+                        with open(path, 'rb') as f_in:
+                            mock_f = FileStorage(stream=f_in, filename=original_name)
+                            data = extract_text_and_images_from_file(mock_f)
+                            
+                            if data.get('error'):
+                                errors.append({'filename': original_name, 'error': data['error']})
+                            elif data and data.get('text'):
+                                image_paths = []
+                                if data.get('images'):
+                                    for img_idx, img in enumerate(data['images']):
+                                        img_fn = f'batch_{batch_id}_{idx}_{img_idx}.png'
+                                        img_p = os.path.join('static', 'uploads', img_fn)
+                                        os.makedirs(os.path.dirname(img_p), exist_ok=True)
+                                        img.save(img_p, 'PNG')
+                                        image_paths.append(f'uploads/{img_fn}')
+                                
+                                documents.append({
+                                    'name': original_name,
+                                    'text': data['text'],
+                                    'images': image_paths
+                                })
+                            else:
+                                errors.append({'filename': original_name, 'error': 'Could not extract text'})
+                except Exception as e:
+                    logger.error(f"Error processing {original_name}: {e}", exc_info=True)
+                    errors.append({'filename': original_name, 'error': f'{type(e).__name__}: {str(e)}'})
             
             if len(documents) < 2:
                 update_status('error', 100, "Gagal memproses gambar.", "Need at least 2 valid documents with extractable text.", True)
