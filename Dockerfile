@@ -31,4 +31,4 @@ EXPOSE 8000
 # Run with gunicorn (production WSGI server)
 # --timeout 120: allow long OCR processing
 # -w 4: 4 worker processes
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "--timeout", "120", "app:app"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "--timeout", "600", "app:app"]
