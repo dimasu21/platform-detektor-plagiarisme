@@ -1,5 +1,26 @@
 /* ==================== FUTURISTIC MINIMALIST DESIGN ==================== */
 /* All colors are literal (no CSS variables) for old browser compatibility */
+/* CSS variables kept here for inline styles in HTML templates */
+:root {
+    --primary-dark: #191A23;
+    --primary-light: #292A32;
+    --accent-lime: #B9FF66;
+    --accent-lime-hover: #a8e85c;
+    --bg-white: #FFFFFF;
+    --bg-gray: #F3F3F3;
+    --text-dark: #191A23;
+    --text-gray: #787878;
+    --text-light: #FFFFFF;
+    --border-color: #E8E8E8;
+    --font-main: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+    --radius-sm: 14px;
+    --radius-md: 20px;
+    --radius-lg: 40px;
+    --radius-full: 100px;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.12);
+}
 
 * {
     box-sizing: border-box;

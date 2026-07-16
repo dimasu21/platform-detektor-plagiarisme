@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plagiarism Detector</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=4) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v=5) }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
@@ -78,17 +78,7 @@
                 document.body.classList.toggle('menu-open');
             });
 
-            // Close menu when clicking on a link
-            var navLinks = headerNav.querySelectorAll('.nav-link, .btn-logout');
-            for (var i = 0; i < navLinks.length; i++) {
-                navLinks[i].addEventListener('click', function() {
-                    burgerMenu.classList.remove('active');
-                    headerNav.classList.remove('active');
-                    document.body.classList.remove('menu-open');
-                });
-            }
-
-            // Close menu when clicking overlay
+            // Close menu when clicking overlay (outside the menu)
             document.addEventListener('click', function(e) {
                 if (document.body.classList.contains('menu-open')) {
                     if (!headerNav.contains(e.target) && !burgerMenu.contains(e.target)) {
