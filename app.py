@@ -5,7 +5,7 @@ import time
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
 
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_file
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
@@ -63,7 +63,7 @@ db.init_app(app)
 
 # Login Manager
 login_manager = LoginManager(app)
-login_manager.login_view = 'login'
+login_manager.login_view = 'login'  # type: ignore[assignment]
 login_manager.login_message = 'Please log in to access this page.'
 
 # Rate Limiter
@@ -392,6 +392,18 @@ def compare():
                 db.session.add(new_scan)
                 db.session.commit()
                 
+                # Store result data in session for PDF download
+                session['last_compare'] = {
+                    'suspect_filename': suspect_data['filename'],
+                    'source_filename': source_data['filename'],
+                    'similarity_score': result['similarity_score'],
+                    'matches': result['matches'],
+                    'suspect_text': suspect_original[:5000],
+                    'source_text': source_original[:5000],
+                    'suspect_images': suspect_images,
+                    'source_images': source_images,
+                }
+                
         else:
             flash('Mohon masukkan teks atau unggah file untuk kedua kolom.', 'error')
             if not suspect_data or not suspect_data['text']:
@@ -407,6 +419,148 @@ def compare():
                          source_highlighted=source_highlighted,
                          suspect_is_image=suspect_is_image,
                          source_is_image=source_is_image)
+
+
+# ==================== PDF REPORT ROUTES ====================
+
+@app.route('/compare/pdf')
+@login_required
+def compare_pdf():
+    """Generate and download a PDF report for the last single comparison."""
+    from pdf_report import generate_single_report
+    
+    compare_data = session.get('last_compare')
+    if not compare_data:
+        flash('Tidak ada hasil perbandingan untuk diunduh. Silakan lakukan perbandingan terlebih dahulu.', 'error')
+        return redirect(url_for('compare'))
+    
+    try:
+        pdf_buffer = generate_single_report(
+            examiner_name=current_user.name,
+            suspect_filename=compare_data.get('suspect_filename', 'Unknown'),
+            source_filename=compare_data.get('source_filename', 'Unknown'),
+            similarity_score=compare_data.get('similarity_score', 0),
+            matches=compare_data.get('matches', []),
+            suspect_text=compare_data.get('suspect_text', ''),
+            source_text=compare_data.get('source_text', ''),
+            suspect_images=compare_data.get('suspect_images'),
+            source_images=compare_data.get('source_images'),
+        )
+        
+        filename = f"Laporan_Plagiarisme_{compare_data.get('suspect_filename', 'report')}.pdf"
+        # Sanitize filename
+        filename = filename.replace(' ', '_').replace('/', '_').replace('\\', '_')
+        
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=filename
+        )
+    except Exception as e:
+        logger.error(f"Error generating PDF report: {e}")
+        flash('Gagal membuat laporan PDF. Silakan coba lagi.', 'error')
+        return redirect(url_for('compare'))
+
+
+@app.route('/batch/detail/<int:pair_index>/pdf')
+@login_required
+def batch_detail_pdf(pair_index):
+    """Generate and download a PDF report for a specific batch pair."""
+    from pdf_report import generate_batch_detail_report
+    import json
+    
+    batch_id = session.get('batch_id')
+    if not batch_id:
+        flash('Data batch tidak ditemukan. Silakan jalankan batch comparison terlebih dahulu.', 'error')
+        return redirect(url_for('batch_comparison'))
+    
+    batch_file_path = os.path.join('static', 'uploads', 'batch_results', f'{batch_id}.json')
+    if not os.path.exists(batch_file_path):
+        flash('Data batch tidak ditemukan.', 'error')
+        return redirect(url_for('batch_comparison'))
+    
+    try:
+        with open(batch_file_path, 'r', encoding='utf-8') as f:
+            results = json.load(f)
+        
+        if pair_index >= len(results['pairs']):
+            flash('Pasangan perbandingan tidak ditemukan.', 'error')
+            return redirect(url_for('batch_comparison'))
+        
+        pair = results['pairs'][pair_index]
+        
+        pdf_buffer = generate_batch_detail_report(
+            examiner_name=current_user.name,
+            doc1_name=pair.get('doc1_name', 'Dokumen 1'),
+            doc2_name=pair.get('doc2_name', 'Dokumen 2'),
+            similarity_score=pair.get('similarity', 0),
+            matches=pair.get('matches', []),
+            doc1_text=pair.get('doc1_text', ''),
+            doc2_text=pair.get('doc2_text', ''),
+            doc1_images=pair.get('doc1_images'),
+            doc2_images=pair.get('doc2_images'),
+        )
+        
+        filename = f"Laporan_Batch_{pair.get('doc1_name', 'doc1')}_vs_{pair.get('doc2_name', 'doc2')}.pdf"
+        filename = filename.replace(' ', '_').replace('/', '_').replace('\\', '_')
+        
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=filename
+        )
+    except Exception as e:
+        logger.error(f"Error generating batch detail PDF: {e}")
+        flash('Gagal membuat laporan PDF. Silakan coba lagi.', 'error')
+        return redirect(url_for('batch_detail', pair_index=pair_index))
+
+
+@app.route('/batch/pdf')
+@login_required
+def batch_summary_pdf():
+    """Generate and download a PDF summary report for the entire batch."""
+    from pdf_report import generate_batch_summary_report
+    from batch_comparison import get_comparison_stats
+    import json
+    
+    batch_id = session.get('batch_id')
+    if not batch_id:
+        flash('Data batch tidak ditemukan. Silakan jalankan batch comparison terlebih dahulu.', 'error')
+        return redirect(url_for('batch_comparison'))
+    
+    batch_file_path = os.path.join('static', 'uploads', 'batch_results', f'{batch_id}.json')
+    if not os.path.exists(batch_file_path):
+        flash('Data batch tidak ditemukan.', 'error')
+        return redirect(url_for('batch_comparison'))
+    
+    try:
+        with open(batch_file_path, 'r', encoding='utf-8') as f:
+            results = json.load(f)
+        
+        stats = get_comparison_stats(results['pairs'])
+        
+        pdf_buffer = generate_batch_summary_report(
+            examiner_name=current_user.name,
+            pairs=results['pairs'],
+            stats=stats,
+            doc_names=results.get('document_names'),
+        )
+        
+        filename = f"Ringkasan_Batch_{batch_id}.pdf"
+        
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=filename
+        )
+    except Exception as e:
+        logger.error(f"Error generating batch summary PDF: {e}")
+        flash('Gagal membuat laporan PDF. Silakan coba lagi.', 'error')
+        return redirect(url_for('batch_comparison'))
+
 
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
