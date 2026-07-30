@@ -385,11 +385,14 @@ def _build_score_section(styles, score):
             fontSize=10, fontName='Helvetica-Bold',
             textColor=COLOR_TEXT_GRAY, alignment=TA_CENTER,
         ))],
+        [Spacer(1, 2 * mm)],
         [Paragraph(f'{score}%', ParagraphStyle(
             'ScoreNum', parent=styles['Normal'],
             fontSize=40, fontName='Helvetica-Bold',
             textColor=score_color, alignment=TA_CENTER,
+            leading=48, spaceAfter=10
         ))],
+        [Spacer(1, 2 * mm)],
     ]
 
     # Visual progress bar
