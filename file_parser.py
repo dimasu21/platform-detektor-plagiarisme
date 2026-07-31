@@ -594,7 +594,10 @@ def _extract_from_pdf(file_storage):
         file_bytes = file_storage.read()
         
         # Convert PDF to images
-        images = convert_from_bytes(file_bytes, poppler_path=POPPLER_PATH)
+        convert_kwargs: dict = {}
+        if POPPLER_PATH:
+            convert_kwargs['poppler_path'] = POPPLER_PATH
+        images = convert_from_bytes(file_bytes, **convert_kwargs)
         
         ocr_text = []
         for i, image in enumerate(images):
@@ -623,7 +626,10 @@ def _extract_from_pdf_with_images(file_storage):
         file_bytes = file_storage.read()
         
         # Convert PDF to images (higher DPI for better quality)
-        images = convert_from_bytes(file_bytes, poppler_path=POPPLER_PATH, dpi=200)
+        convert_kwargs: dict = {'dpi': 200}
+        if POPPLER_PATH:
+            convert_kwargs['poppler_path'] = POPPLER_PATH
+        images = convert_from_bytes(file_bytes, **convert_kwargs)
         logger.debug(f"DEBUG: Converted PDF to {len(images)} page images")
         
         ocr_text = []
@@ -821,7 +827,7 @@ def compute_image_similarity(pil_image1, pil_image2):
     logger.debug(f"  DEBUG [Histogram-Binary]: Score = {hist_score:.2f}%")
     
     # === METHOD 5: ORB Feature Matching on binarized images ===
-    orb = cv2.ORB_create(nfeatures=1000)
+    orb = cv2.ORB_create(nfeatures=1000)  # type: ignore[attr-defined]
     kp1, des1 = orb.detectAndCompute(bin1, None)
     kp2, des2 = orb.detectAndCompute(bin2, None)
     

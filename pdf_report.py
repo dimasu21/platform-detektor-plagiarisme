@@ -500,7 +500,7 @@ def _build_interpretation_table(styles):
 
 
 def _build_text_comparison(styles, text1, text2, matches,
-                           label1="Jawaban Mahasiswa", label2="Kunci Jawaban"):
+                           label1="Jawaban Mahasiswa", label2="Jawaban Lainnya"):
     """Build side-by-side text comparison with highlighted matches."""
     elements = []
 
@@ -728,7 +728,7 @@ def generate_single_report(examiner_name, suspect_filename, source_filename,
     if suspect_text and source_text:
         elements.extend(_build_text_comparison(
             styles, suspect_text, source_text, matches,
-            label1="Jawaban Mahasiswa", label2="Kunci Jawaban"
+            label1="Jawaban Mahasiswa", label2="Jawaban Lainnya"
         ))
 
     # Matched phrases
@@ -739,7 +739,7 @@ def generate_single_report(examiner_name, suspect_filename, source_filename,
         elements.append(PageBreak())
         elements.extend(_build_images_section(
             styles, suspect_images, source_images,
-            label1="Jawaban Mahasiswa", label2="Kunci Jawaban"
+            label1="Jawaban Mahasiswa", label2="Jawaban Lainnya"
         ))
 
     # Build PDF
