@@ -842,6 +842,7 @@ def batch_processing(batch_id):
 
 @app.route('/api/batch_status/<batch_id>')
 @login_required
+@limiter.exempt
 def batch_status(batch_id):
     status_file = os.path.join('static', 'uploads', 'batch_results', f'{batch_id}_status.json')
     if not os.path.exists(status_file):

@@ -64,8 +64,16 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function checkStatus() {
         fetch(`/api/batch_status/${batchId}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    console.warn(`Status check returned ${response.status}, retrying...`);
+                    return null;
+                }
+                return response.json();
+            })
             .then(data => {
+                if (!data) return;
+                
                 if (data.error && data.is_complete) {
                     clearInterval(checkInterval);
                     errorBox.style.display = 'block';
