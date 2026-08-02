@@ -9,12 +9,14 @@
 
     <!-- Quick Navigation Cards -->
     <div class="stats-grid" style="margin-bottom: 2rem;">
+        {% if current_user.is_admin() %}
         <div class="stat-card">
             <span class="stat-label">Total Pengguna Terdaftar</span>
             <span class="stat-value" style="color: #333;">{{ stats.total_users }}</span>
         </div>
+        {% endif %}
         <div class="stat-card">
-            <span class="stat-label">Total Dokumen Diperiksa</span>
+            <span class="stat-label">{% if current_user.is_admin() %}Total Dokumen Diperiksa{% else %}Dokumen Saya Diperiksa{% endif %}</span>
             <span class="stat-value" style="color: #2196F3;">{{ stats.total_scans }}</span>
         </div>
         <div class="stat-card">

@@ -205,10 +205,22 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    stats = get_db_stats()
+    if current_user.is_admin():
+        stats = get_db_stats()
+        base_query = ScanHistory.query
+    else:
+        # For regular users, calculate personal stats and scope queries to their ID
+        user_scans = ScanHistory.query.filter_by(user_id=current_user.id)
+        total_scans = user_scans.count()
+        plagiarized_scans = user_scans.filter(ScanHistory.status.in_(['Plagiat', 'Warning'])).count()
+        stats = {
+            'total_scans': total_scans,
+            'plagiarized_scans': plagiarized_scans
+        }
+        base_query = user_scans
     
-    # Get 5 recent scans for the table
-    recent_scans_db = ScanHistory.query.order_by(ScanHistory.date.desc()).limit(5).all()
+    # Get 5 recent scans for the table based on scope
+    recent_scans_db = base_query.order_by(ScanHistory.date.desc()).limit(5).all()
     recent_scans = []
     for scan in recent_scans_db:
         # Convert UTC to local time (WIB / UTC+7) for display
@@ -233,9 +245,9 @@ def dashboard():
         day = today - timedelta(days=i)
         chart_labels.append(day.strftime('%d %b'))
         
-        # Count scans on this day
+        # Count scans on this day based on scope
         next_day = day + timedelta(days=1)
-        day_scans = ScanHistory.query.filter(ScanHistory.date >= day, ScanHistory.date < next_day).all()
+        day_scans = base_query.filter(ScanHistory.date >= day, ScanHistory.date < next_day).all()
         scans_data.append(len(day_scans))
         
         plagiat_count = sum(1 for s in day_scans if s.status in ['Plagiat', 'Warning'])
