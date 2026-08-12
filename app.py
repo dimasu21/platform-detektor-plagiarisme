@@ -52,8 +52,10 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 # Secure cookie configuration
 app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['REMEMBER_COOKIE_HTTPONLY'] = True
+# NOTE: Do NOT set SESSION_COOKIE_SAMESITE. Old browsers (e.g. Evercross tablet)
+# don't understand SameSite attribute and reject the cookie entirely,
+# causing CSRF token to be lost → "Bad Request: The CSRF session token is missing".
 
 # Enable secure cookies ONLY when using HTTPS
 # NOTE: Do NOT tie this to FLASK_ENV=production. In Docker without HTTPS,
@@ -108,6 +110,14 @@ def set_security_headers(response):
 def too_large(e):
     flash('File terlalu besar. Maksimal 16 MB.', 'error')
     return redirect(request.referrer or url_for('dashboard')), 413
+
+@app.errorhandler(400)
+def bad_request(e):
+    """Handle CSRF token errors with a friendly redirect instead of a raw error page."""
+    if 'CSRF' in str(e):
+        flash('Sesi Anda telah berakhir. Silakan coba lagi.', 'error')
+        return redirect(url_for('login'))
+    return 'Bad Request', 400
 
 @app.errorhandler(429)
 def ratelimit_handler(e):
