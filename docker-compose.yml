@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: plagiarisme-app
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persist database & uploads outside container
+      - ./data:/app/instance
+      - ./uploads:/app/static/uploads
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-ganti-dengan-key-random-yang-kuat}
+      - DATABASE_URL=sqlite:///instance/plagiarism.db
+      - FLASK_ENV=production
+      - TESSERACT_CMD=/usr/bin/tesseract
+      - POPPLER_PATH=
+      - OMP_THREAD_LIMIT=1

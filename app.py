@@ -10,6 +10,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from werkzeug.middleware.proxy_fix import ProxyFix
 from dotenv import load_dotenv
 
 from preprocessing import preprocess_text
@@ -28,6 +29,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+
+# Fix for running behind Nginx/reverse proxy:
+# This tells Flask to trust the X-Forwarded-* headers from the proxy
+# so it correctly detects HTTPS scheme and real client IP.
+# Without this, CSRF session tokens fail because Flask thinks it's HTTP.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 # ==================== CONFIGURATION ====================
 
@@ -48,8 +55,11 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['REMEMBER_COOKIE_HTTPONLY'] = True
 
-# Enable secure cookies only when not in development
-if os.environ.get('FLASK_ENV') == 'production':
+# Enable secure cookies ONLY when using HTTPS
+# NOTE: Do NOT tie this to FLASK_ENV=production. In Docker without HTTPS,
+# SESSION_COOKIE_SECURE=True causes the browser to reject the session cookie,
+# which breaks CSRF tokens ("Bad Request: The CSRF session token is missing").
+if os.environ.get('HTTPS_ENABLED', 'false').lower() == 'true':
     app.config['SESSION_COOKIE_SECURE'] = True
     app.config['REMEMBER_COOKIE_SECURE'] = True
 

@@ -81,16 +81,24 @@
 
 <!-- Include Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Jinja2 data injection (separate block to avoid IDE parse errors) -->
+<script type="application/json" id="chartLabelsData">{{ chart_labels | tojson }}</script>
+<script type="application/json" id="chartDataScans">{{ chart_data_scans | tojson }}</script>
+<script type="application/json" id="chartDataPlagiat">{{ chart_data_plagiat | tojson }}</script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('activityChart').getContext('2d');
-        const activityChart = new Chart(ctx, {
+        var chartLabels = JSON.parse(document.getElementById('chartLabelsData').textContent);
+        var chartDataScans = JSON.parse(document.getElementById('chartDataScans').textContent);
+        var chartDataPlagiat = JSON.parse(document.getElementById('chartDataPlagiat').textContent);
+
+        var ctx = document.getElementById('activityChart').getContext('2d');
+        var activityChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: {{ chart_labels | tojson }},
+                labels: chartLabels,
                 datasets: [{
                     label: 'Jumlah Dokumen Diperiksa',
-                    data: {{ chart_data_scans | tojson }},
+                    data: chartDataScans,
                     backgroundColor: 'rgba(76, 175, 80, 0.6)',
                     borderColor: 'rgba(76, 175, 80, 1)',
                     borderWidth: 1,
@@ -98,7 +106,7 @@
                 },
                 {
                     label: 'Terindikasi Plagiat',
-                    data: {{ chart_data_plagiat | tojson }},
+                    data: chartDataPlagiat,
                     backgroundColor: 'rgba(244, 67, 54, 0.6)',
                     borderColor: 'rgba(244, 67, 54, 1)',
                     borderWidth: 1,
@@ -118,7 +126,7 @@
                 },
                 plugins: {
                     legend: {
-                        position: 'top',
+                        position: 'top'
                     }
                 }
             }
